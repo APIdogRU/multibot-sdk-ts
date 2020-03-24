@@ -33,7 +33,7 @@ export type ArgumentMessage = {
  */
 export type EventArgumentMessage = Listener<ArgumentMessage>;
 
-class TelegramBot
+export class TelegramBot
     extends AbstractBot<TelegramBot.Config, EventType, EventListener>
     implements IBotPolling {
 
@@ -182,4 +182,3 @@ class TelegramBot
 }
 
 export * from './utils';
-export default TelegramBot;

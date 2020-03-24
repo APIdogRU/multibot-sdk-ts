@@ -16,7 +16,7 @@ interface EventListener {
     (event: EventType.MessageDelete, listener: Listener<Message>): void;
 }
 
-class VkBot
+export class VkBot
     extends AbstractBot<VkBot.Config, EventType, EventListener>
     implements IBotPolling {
 
@@ -134,5 +134,3 @@ class VkBot
         this.isPollingActive = false;
     }
 }
-
-export default VkBot;
