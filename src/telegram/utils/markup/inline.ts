@@ -17,7 +17,7 @@ export class Builder extends KeyboardBuilder<InlineKeyboard, Button, InlineKeybo
 }
 
 export class Button extends KeyboardButton<InlineKeyboardButtonProps> {
-    constructor(text: string, props: InlineKeyboardButtonProps) {
+    constructor(text: string, props: InlineKeyboardButtonProps = {}) {
         super(text, props);
 
         const fields = Object.keys(props).filter(v => v !== 'text');
