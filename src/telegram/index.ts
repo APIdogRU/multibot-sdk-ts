@@ -99,7 +99,8 @@ export class Bot
 
         const form = Object.keys(params).reduce((form, key) => {
             if (params[key] !== undefined) {
-                form.append(key, params[key]);
+                const v = params[key];
+                form.append(key, typeof v === 'object' ? JSON.stringify(v) : v);
             }
             return form;
         }, new FormData());
