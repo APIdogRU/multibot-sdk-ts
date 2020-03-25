@@ -1,6 +1,4 @@
-import { Location } from './media';
-import { User } from './user';
-import { InlineKeyboard } from './keyboard';
+import { Location, User, InlineKeyboard } from '.';
 
 export interface InlineQuery {
     id: string;

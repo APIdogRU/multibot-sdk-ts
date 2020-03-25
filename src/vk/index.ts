@@ -1,23 +1,22 @@
 import AbstractBot, { IBotPolling, Listener } from '../abstract-bot';
 import * as FormData from 'form-data';
 import axios from 'axios';
-import { Message } from './types/message';
-import { Config, LongPollProps, Request, Update, UpdateItem } from './types/api';
+import { Config, LongPollProps, Request, Update, UpdateItem, Message } from './types';
 
-const enum EventType {
+export const enum Event {
     Message = 'message',
     MessageUpdate = 'message-update',
     MessageDelete = 'message-delete'
 }
 
 interface EventListener {
-    (event: EventType.Message, listener: Listener<Message>): void;
-    (event: EventType.MessageUpdate, listener: Listener<Message>): void;
-    (event: EventType.MessageDelete, listener: Listener<Message>): void;
+    (event: Event.Message, listener: Listener<Message>): void;
+    (event: Event.MessageUpdate, listener: Listener<Message>): void;
+    (event: Event.MessageDelete, listener: Listener<Message>): void;
 }
 
-export class VkBot
-    extends AbstractBot<Config, EventType, EventListener>
+export class Bot
+    extends AbstractBot<Config, Event, EventListener>
     implements IBotPolling {
 
     static readonly defaultConfig: Config = {
@@ -40,7 +39,7 @@ export class VkBot
             throw new Error('groupId must be positive');
         }
 
-        this.config = { ...VkBot.defaultConfig, ...config };
+        this.config = { ...Bot.defaultConfig, ...config };
     }
 
     protected getApiEndpoint = (method: string) => `${this.config.apiUrl}/${method}`;
@@ -120,11 +119,11 @@ export class VkBot
         switch (update.type) {
             case 'message_new':
             case 'message_reply':
-                this.emit(EventType.Message, update.object);
+                this.emit(Event.Message, update.object);
                 break;
 
             case 'message_edit':
-                this.emit(EventType.MessageUpdate, update.object);
+                this.emit(Event.MessageUpdate, update.object);
                 break;
         }
     };
@@ -133,3 +132,5 @@ export class VkBot
         this.isPollingActive = false;
     }
 }
+
+export * from './utils';

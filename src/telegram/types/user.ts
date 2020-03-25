@@ -1,5 +1,4 @@
-import { PhotoSize } from './media';
-import { Message } from './message';
+import { PhotoSize, Message } from '.';
 
 export interface User {
     id: number;

@@ -1,6 +1,4 @@
-import { User, Chat } from './user';
-import { Audio, Document, Animation, Game, PhotoSize, Sticker, Video, Voice, Contact, Location, Venue, Poll } from './media';
-import { Keyboard } from './keyboard';
+import { User, Chat, Audio, Document, Animation, Game, PhotoSize, Sticker, Video, Voice, Contact, Location, Venue, Poll, Markup } from '.';
 
 export interface Message {
     message_id: number;
@@ -39,7 +37,7 @@ export interface Message {
     new_chat_photo?: PhotoSize[];
     delete_chat_photo?: boolean;
     group_chat_created?: boolean;
-    reply_markup?: Keyboard;
+    reply_markup?: Markup;
 }
 
 export interface MessageEntity {

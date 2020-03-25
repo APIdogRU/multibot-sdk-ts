@@ -1,4 +1,4 @@
-import { AbsItemWithName } from './general';
+import { AbsItemWithName } from '.';
 
 export interface User {
     id: number;
@@ -35,7 +35,7 @@ export type UserLastSeen = {
     platform?: number;
 }
 
-export  enum Platform {
+export const enum Platform {
     MOBILE = 1,
     IPHONE = 2,
     IPAD = 3,
@@ -45,7 +45,7 @@ export  enum Platform {
     SITE = 7
 }
 
-export  enum UserSex {
+export const enum UserSex {
     UNKNOWN = 0,
     FEMALE = 1,
     MALE = 2

@@ -1,6 +1,4 @@
-import { User, UserDefaultKeys, UserNameCase } from './user';
-import { Message } from './message';
-import { Keyboard } from './keyboard';
+import { User, UserDefaultKeys, UserNameCase, Message, Keyboard } from '.';
 
 export interface Config {
     token: string;
@@ -11,10 +9,12 @@ export interface Config {
 
 export type SendFile = string | Buffer;
 
+export type UserFieldExtra = Exclude<keyof User, UserDefaultKeys>;
+
 export interface Request {
     (method: 'users.get', params: {
         user_ids: number | number[] | string | string[];
-        fields?: Exclude<keyof User, UserDefaultKeys>[];
+        fields?: UserFieldExtra[];
         name_case?: UserNameCase;
     }): Promise<User[]>;
 

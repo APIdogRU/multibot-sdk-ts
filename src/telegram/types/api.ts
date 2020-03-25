@@ -1,10 +1,5 @@
 import { Stream } from 'stream';
-import { Update, WebhookInfo } from './common';
-import { User, UserProfilePhotos, Chat, ChatMember } from './user';
-import { BaseOption, SendMessageOptions, SendMediaOptions, ChatAction, ParseMode } from './send';
-import { Message } from './message';
-import { InputMediaPhoto, InputMediaVideo, QuizType, File, Poll } from './media';
-import { InlineKeyboard } from './keyboard';
+import { Update, WebhookInfo, User, UserProfilePhotos, Chat, ChatMember, BaseOption, SendMessageOptions, SendMediaOptions, ChatAction, ParseMode, Message, InputMediaPhoto, InputMediaVideo, QuizType, File, Poll, InlineKeyboard } from '.';
 
 /**
  * SDK

@@ -1,4 +1,4 @@
-export interface Keyboard {
+export interface Markup {
 
 }
 
@@ -10,7 +10,7 @@ export interface KeyboardButton {
  * Reply keyboard
  */
 
-export interface ReplyKeyboard extends Keyboard {
+export interface ReplyKeyboard extends Markup {
     keyboard: ReplyKeyboardButton[][];
     resize_keyboard?: boolean;
     one_time_keyboard?: boolean;
@@ -22,7 +22,7 @@ export interface ReplyKeyboardButton extends KeyboardButton {
     request_location?: boolean;
 }
 
-export interface ReplyKeyboardRemove extends Keyboard {
+export interface KeyboardRemoveMarkup extends Markup {
     remove_keyboard: boolean;
     selective?: boolean;
 }
@@ -31,7 +31,7 @@ export interface ReplyKeyboardRemove extends Keyboard {
  * Inline keyboard
  */
 
-export interface InlineKeyboard extends Keyboard {
+export interface InlineKeyboard extends Markup {
     inline_keyboard: InlineKeyboardButton[][];
 }
 
@@ -53,7 +53,7 @@ export interface LoginUrl {
 
 export type CallbackGame = object;
 
-export interface ForceReply extends Keyboard {
+export interface ForceReplyMarkup extends Markup {
     force_reply: boolean;
     selective?: boolean;
 }

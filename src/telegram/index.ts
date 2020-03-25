@@ -2,23 +2,29 @@ import * as fs from 'fs';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import AbstractBot, { IBotPolling, Listener } from '../abstract-bot';
-import { Update, CallbackQuery } from './types/common';
-import { Message } from './types/message';
-import { User } from './types/user';
-import { Config, Request } from './types/api';
+import { Config, Request, User, Message, Update, CallbackQuery, AllowedUpdate, Chat, InlineQuery, ChosenInlineResult } from './types';
+import { fastReply } from './utils';
 
-const enum EventType {
+export const enum Event {
     Message = 'message',
-    MessageUpdate = 'message-update',
-    MessageDelete = 'message-delete',
-    CallbackQuery = 'callback-query'
+    MessageEdited = 'message-edited',
+
+    ChannelPost = 'channel-post',
+    ChannelPostEdited = 'channel-post-edited',
+
+    CallbackQuery = 'callback-query',
+    InlineQuery = 'inline-query',
+    ChosenInlineResult = 'chosen-inline-result'
 }
 
 interface EventListener {
-    (event: EventType.Message, listener: EventArgumentMessage): void;
-    (event: EventType.MessageUpdate, listener: EventArgumentMessage): void;
-    (event: EventType.MessageDelete, listener: Listener<Message>): void;
-    (event: EventType.CallbackQuery, listener: Listener<CallbackQuery>): void;
+    (event: Event.Message, listener: Listener<ArgumentMessage>): void;
+    (event: Event.MessageEdited, listener: Listener<ArgumentMessage>): void;
+    (event: Event.ChannelPost, listener: Listener<ArgumentMessage>): void;
+    (event: Event.ChannelPostEdited, listener: Listener<ArgumentMessage>): void;
+    (event: Event.CallbackQuery, listener: Listener<CallbackQuery>): void;
+    (event: Event.InlineQuery, listener: Listener<InlineQuery>): void;
+    (event: Event.ChosenInlineResult, listener: Listener<ChosenInlineResult>): void;
 }
 
 /**
@@ -26,16 +32,13 @@ interface EventListener {
  */
 export type ArgumentMessage = {
     message: Message;
-    user: User;
+    sender: User;
+    chat: Chat;
+    fastReply: (text: string) => void;
 };
 
-/**
- * Message listener
- */
-export type EventArgumentMessage = Listener<ArgumentMessage>;
-
-export class TelegramBot
-    extends AbstractBot<Config, EventType, EventListener>
+export class Bot
+    extends AbstractBot<Config, Event, EventListener>
     implements IBotPolling {
 
     static readonly defaultConfig: Config = {
@@ -50,7 +53,7 @@ export class TelegramBot
             throw new Error('secret not specified');
         }
 
-        this.config = { ...TelegramBot.defaultConfig, ...config };
+        this.config = { ...Bot.defaultConfig, ...config };
     }
 
     protected getApiEndpoint = (method: string) => {
@@ -116,30 +119,48 @@ export class TelegramBot
         return data.result;
     };
 
+    private readonly handleEventWith: Record<AllowedUpdate, Event> = {
+        message: Event.Message,
+        edited_message: Event.MessageEdited,
+        channel_post: Event.ChannelPost,
+        edited_channel_post: Event.ChannelPostEdited,
+        inline_query: Event.InlineQuery,
+        callback_query: Event.CallbackQuery,
+        chosen_inline_result: Event.ChosenInlineResult,
+    };
+
     /**
      *
      */
     private handleUpdate = (update: Update) => {
-        if (update.message) {
-            this.handleMessage(update.message);
+        const type = Object.keys(update).filter(v => v !== 'update_id')[0] as AllowedUpdate;
+        const eventType = this.handleEventWith[type];
+
+        switch (eventType) {
+            case Event.Message:
+            case Event.MessageEdited:
+            case Event.ChannelPost:
+            case Event.ChannelPostEdited: {
+                const message = update[type] as Message;
+                this.emit(eventType, {
+                    message,
+                    sender: message.from,
+                    chat: message.chat,
+                    fastReply: text => fastReply(this, message, text),
+                } as ArgumentMessage);
+                break;
+            }
+
+            case Event.CallbackQuery: {
+                this.emit(Event.CallbackQuery, update.callback_query);
+                break;
+            }
+
+            case Event.InlineQuery: {
+                this.emit(Event.InlineQuery, update.inline_query);
+                break;
+            }
         }
-
-        if (update.callback_query) {
-            this.handleCallbackQuery(update.callback_query);
-        }
-    };
-
-    private handleMessage = (message: Message) => {
-        const arg: ArgumentMessage = {
-            message,
-            user: message.from,
-        };
-
-        this.emit(EventType.Message, arg);
-    };
-
-    private handleCallbackQuery = (query: CallbackQuery) => {
-        this.emit(EventType.CallbackQuery, query);
     };
 
     /**

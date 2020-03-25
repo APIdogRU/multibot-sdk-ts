@@ -1,7 +1,6 @@
-import { Message } from './message';
-import { InlineQuery } from './inline-query';
-import { User } from './user';
-import { Location } from './media';
+import { Message, InlineQuery, User, Location } from '.';
+
+export type AllowedUpdate = (Exclude<keyof Update, 'update_id'>);
 
 export interface WebhookInfo {
     url: string;
@@ -10,7 +9,7 @@ export interface WebhookInfo {
     last_error_date: number;
     last_error_message: string;
     nax_connections: number;
-    allowed_updated?: (Exclude<keyof Update, 'update_id'>)[];
+    allowed_updates?: AllowedUpdate[];
 }
 
 export interface Update {

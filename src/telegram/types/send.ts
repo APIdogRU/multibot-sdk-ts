@@ -1,4 +1,4 @@
-import { Keyboard } from './keyboard';
+import { Markup } from '.';
 
 export type ParseMode = 'Markdown' | 'MarkdownV2' | 'HTML';
 
@@ -9,7 +9,7 @@ export type BaseOption = {
 export interface SendExtraOptions {
     disable_notification?: boolean;
     reply_to_message_id?: number;
-    reply_markup?: Keyboard;
+    reply_markup?: Markup;
 }
 
 export interface SendMessageOptions extends SendExtraOptions {

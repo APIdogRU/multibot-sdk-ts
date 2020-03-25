@@ -1,5 +1,5 @@
 import { extractEntites } from '.';
-import { Message } from '../types/message';
+import { Message } from '../types';
 
 describe('Telegram text entry extractor' , () => {
     const basicMessage: Message = {

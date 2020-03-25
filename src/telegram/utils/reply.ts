@@ -1,8 +1,7 @@
-import { Message } from '../types/message';
-import { SendMessageOptions } from '../types/send';
-import { TelegramBot } from '../';
+import { Message, SendMessageOptions } from '../types';
+import { Bot } from '..';
 
-export const reply = async(bot: TelegramBot, message: Message, text: string, options: SendMessageOptions = {}) => bot.request('sendMessage', {
+export const fastReply = async(bot: Bot, message: Message, text: string, options: SendMessageOptions = {}) => bot.request('sendMessage', {
     chat_id: message.chat.id,
     text,
     ...options

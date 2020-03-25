@@ -1,5 +1,4 @@
-import { MessageEntity } from './message';
-import { ParseMode } from './send';
+import { MessageEntity, ParseMode } from '.';
 
 export interface FileBase {
     file_id: string;
