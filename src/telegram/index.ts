@@ -5,6 +5,7 @@ import AbstractBot, { IBotPolling, Listener } from '../abstract-bot';
 import { Update, CallbackQuery } from './types/common';
 import { Message } from './types/message';
 import { User } from './types/user';
+import { Config, Request } from './types/api';
 
 const enum EventType {
     Message = 'message',
@@ -34,15 +35,15 @@ export type ArgumentMessage = {
 export type EventArgumentMessage = Listener<ArgumentMessage>;
 
 export class TelegramBot
-    extends AbstractBot<TelegramBot.Config, EventType, EventListener>
+    extends AbstractBot<Config, EventType, EventListener>
     implements IBotPolling {
 
-    static readonly defaultConfig: TelegramBot.Config = {
+    static readonly defaultConfig: Config = {
         secret: 'never_used',
         apiUrl: 'https://api.telegram.org',
     };
 
-    constructor(config: TelegramBot.Config) {
+    constructor(config: Config) {
         super();
 
         if (!config.secret) {
@@ -83,7 +84,7 @@ export class TelegramBot
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public request: TelegramBot.Request = async<T>(apiMethod: string, params: Record<string, any> = {}) => {
+    public request: Request = async<T>(apiMethod: string, params: Record<string, any> = {}) => {
         type Result = {
             ok: boolean;
             result: T;

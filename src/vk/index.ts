@@ -1,8 +1,8 @@
 import AbstractBot, { IBotPolling, Listener } from '../abstract-bot';
 import * as FormData from 'form-data';
 import axios from 'axios';
-import { LongPollProps, Message, Update, UpdateItem } from './types/api';
-
+import { Message } from './types/message';
+import { Config, LongPollProps, Request, Update, UpdateItem } from './types/api';
 
 const enum EventType {
     Message = 'message',
@@ -17,10 +17,10 @@ interface EventListener {
 }
 
 export class VkBot
-    extends AbstractBot<VkBot.Config, EventType, EventListener>
+    extends AbstractBot<Config, EventType, EventListener>
     implements IBotPolling {
 
-    static readonly defaultConfig: VkBot.Config = {
+    static readonly defaultConfig: Config = {
         token: 'never_used',
         groupId: 0,
         apiUrl: 'https://api.vk.com/method',
@@ -29,7 +29,7 @@ export class VkBot
 
     private server?: LongPollProps = undefined;
 
-    constructor(config: VkBot.Config) {
+    constructor(config: Config) {
         super();
 
         if (!config.token) {
@@ -46,7 +46,7 @@ export class VkBot
     protected getApiEndpoint = (method: string) => `${this.config.apiUrl}/${method}`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public request: VkBot.Request = async<T>(apiMethod: string, params: Record<string, any> = {}): Promise<T> => {
+    public request: Request = async<T>(apiMethod: string, params: Record<string, any> = {}): Promise<T> => {
         type Response = { response: T };
 
         const form = Object.keys(params).reduce((form, key) => {
@@ -66,7 +66,6 @@ export class VkBot
                 ...(form.getHeaders())
             }
         });
-        console.log(data);
 
         if (status !== 200) {
             throw new Error(`Error HTTP ${statusText}`);

@@ -7,8 +7,13 @@
         "noImplicitReturns": false,
         "noImplicitAny": true,
         "declaration": true,
-        "declarationDir": "dist",
-        "declarationMap": true
+        "declarationDir": "./dist",
+        "outDir": "./dist",
+        "sourceMap": true
+    },
+    "typedocOptions": {
+        "mode": "modules",
+        "out": "docs"
     },
     "include": [
         "src/**/*"
