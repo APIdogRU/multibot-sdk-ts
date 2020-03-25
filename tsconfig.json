@@ -2,7 +2,7 @@
     "compilerOptions": {
         "module": "commonjs",
         "moduleResolution": "node",
-        "target": "esnext",
+        "target": "es6",
         "lib": ["es6"],
         "noImplicitReturns": false,
         "noImplicitAny": true,
