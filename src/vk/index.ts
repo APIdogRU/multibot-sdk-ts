@@ -1,18 +1,29 @@
 import AbstractBot, { IBotPolling, Listener } from '../abstract-bot';
 import * as FormData from 'form-data';
 import axios from 'axios';
-import { Config, LongPollProps, Request, Update, UpdateItem, Message } from './types';
+import { Config, LongPollProps, Request, Update, UpdateItem, Message, User, ClientInfo, UserFieldExtra } from './types';
+import { getSender } from './utils';
 
 export const enum Event {
     Message = 'message',
+    MessageOut = 'message-reply',
     MessageUpdate = 'message-update',
-    MessageDelete = 'message-delete'
+    MessageAllow = 'message-allow',
+    MessageDeny = 'message-deny'
 }
 
+type ArgumentListener = {
+    message: Message;
+    getSender: () => Promise<User>;
+    capability?: ClientInfo;
+};
+
 interface EventListener {
-    (event: Event.Message, listener: Listener<Message>): void;
-    (event: Event.MessageUpdate, listener: Listener<Message>): void;
-    (event: Event.MessageDelete, listener: Listener<Message>): void;
+    (event: Event.Message, listener: Listener<ArgumentListener & { capability?: ClientInfo }>): void;
+    (event: Event.MessageOut, listener: Listener<ArgumentListener>): void;
+    (event: Event.MessageUpdate, listener: Listener<ArgumentListener>): void;
+    (event: Event.MessageAllow, listener: Listener<Message>): void;
+    (event: Event.MessageDeny, listener: Listener<Message>): void;
 }
 
 export class Bot
@@ -50,14 +61,21 @@ export class Bot
 
         const form = Object.keys(params).reduce((form, key) => {
             if (params[key] !== undefined) {
-                form.append(key, params[key]);
+                let v = params[key];
+                if (Array.isArray(v)) {
+                    v = v.join(',');
+                }
+                if (typeof v !== 'string') {
+                    v = JSON.stringify(v);
+                }
+                form.append(key, v);
             }
             return form;
         }, new FormData());
 
         form.append('access_token', this.config.token);
         form.append('v', this.config.apiVersion);
-
+console.log(form);
         const endpoint = this.getApiEndpoint(apiMethod);
 
         const { data, status, statusText } = await axios.post<Response>(endpoint, form, {
@@ -65,7 +83,7 @@ export class Bot
                 ...(form.getHeaders())
             }
         });
-
+console.log(data);
         if (status !== 200) {
             throw new Error(`Error HTTP ${statusText}`);
         }
@@ -88,7 +106,7 @@ export class Bot
 
         this.isPollingActive = true;
         this.server = await this.getLongPollServer();
-        console.log('poll', this.server);
+
         (async() => {
             while (this.isPollingActive) {
                 await this.poll();
@@ -117,20 +135,48 @@ export class Bot
 
     private handleUpdate = (update: UpdateItem) => {
         switch (update.type) {
-            case 'message_new':
-            case 'message_reply':
-                this.emit(Event.Message, update.object);
-                break;
+            case 'message_new': {
+                const args: Partial<ArgumentListener> = { };
+                const object = update.object;
 
-            case 'message_edit':
+                if ('message' in object) {
+                    args.message = object.message;
+                    args.capability = object.client_info;
+                } else {
+                    args.message = object;
+                }
+
+                args.getSender = async(fields: UserFieldExtra[] = []) => getSender(this, args.message, fields);
+
+                this.emit(Event.Message, args);
+                break;
+            }
+
+            case 'message_reply': {
+                this.emit(Event.MessageOut, update.object);
+                break;
+            }
+
+            case 'message_edit': {
                 this.emit(Event.MessageUpdate, update.object);
                 break;
+            }
+
+            case 'message_allow': {
+                this.emit(Event.MessageAllow, update.object);
+                break;
+            }
+
+            case 'message_deny': {
+                this.emit(Event.MessageDeny, update.object);
+                break;
+            }
         }
     };
 
     public stopPolling = () => {
         this.isPollingActive = false;
-    }
+    };
 }
 
 export * from './utils';

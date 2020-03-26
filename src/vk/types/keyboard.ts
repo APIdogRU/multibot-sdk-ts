@@ -18,34 +18,35 @@ export type KeyboardButtonAction =
     | ButtonVkPay
     | ButtonOpenApp;
 
-interface KeyboardButtonActionAbs<T extends string> {
-    type: T;
+export interface ButtonText {
+    type: 'text';
+    label: string;
+    payload?: string;
 }
 
-export type ButtonText = KeyboardButtonActionAbs<'text'> & {
-    label: string;
-    payload?: string;
-};
-
-export type ButtonOpenLink = KeyboardButtonActionAbs<'open_link'> & {
+export interface ButtonOpenLink {
+    type: 'open_link';
     link: string;
     label: string;
-};
+}
 
-export type ButtonLocation = KeyboardButtonActionAbs<'location'> & {
+export interface ButtonLocation {
+    type: 'location';
     link: string;
     label: string;
-};
+}
 
-export type ButtonVkPay = KeyboardButtonActionAbs<'vkpay'> & {
+export interface ButtonVkPay {
+    type: 'vkpay';
     payload?: string;
     hash: string;
-};
+}
 
-export type ButtonOpenApp = KeyboardButtonActionAbs<'open_app'> & {
+export interface ButtonOpenApp {
+    type: 'open_app';
     app_id: number;
     owner_id?: number;
     payload?: string;
     label: string;
     hash?: string;
-};
+}

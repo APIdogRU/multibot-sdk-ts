@@ -33,6 +33,7 @@ export interface Request {
         payload?: string;
         dont_parse_links?: 1 | 0;
         disable_mentions?: 1 | 0;
+        random_id: number;
     }): Promise<number>;
 
     (method: 'messages.edit', params: {
