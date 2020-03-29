@@ -1,3 +1,5 @@
+import { ParseMode } from '../types';
+
 const escapeChars = (text: string, chars: string[]) => {
     for (const char of chars) {
         text = text.replace(char, '\\' + char);
@@ -28,5 +30,15 @@ export class MarkdownV2 {
         return `[${escapeChars(label, [']'])}](${escapeChars(url, [')'])})`
     };
     public static codeLine: MdV2fx = text => wrapString(text, '`');
-    public static codeBlock: MdV2fx = text => `\`\`\`${escapeChars(text, ['```'])}\`\`\``;
+    public static codeBlock: MdV2fx = text => `\`\`\`${escapeChars(text, ['`'])}\`\`\``;
+
+    public static sanitizeString = (text: string) => text.replace(/([_*[\]()~`>#+=|{}.!-])/ig, '\\$1');
 }
+
+export const sanitizeMarkdownV2Props = <T extends (Record<string, unknown> & { parse_mode?: ParseMode }) >(props: T, key = 'text'): T => {
+    if (props.parse_mode === ParseMode.MarkdownV2) {
+        (props as Record<string, string>)[key] = MarkdownV2.sanitizeString(props[key]);
+    }
+
+    return props;
+};

@@ -5,6 +5,7 @@ import AbstractBot, { IBotPolling } from '../abstract-bot';
 import { User, Message, Update, CallbackQuery, Chat, InlineQuery, ChosenInlineResult, Location, WebhookInfo, ParseMode, ChatAction, UserProfilePhotos, File, Markup, ChatMember, InlineQueryResult, GameHighScore, InlineKeyboard, InputMediaVideo, InputMediaPhoto, QuizType, Poll } from './types';
 import { TelegramMatcher, MatchType, MatchResultCommand } from './matcher';
 import { Listener } from '../utils';
+import { sanitizeMarkdownV2Props } from './utils';
 
 export interface Config {
     secret: string;
@@ -159,7 +160,7 @@ export class Bot
         reply_markup?: Markup;
         parse_mode?: ParseMode;
         disable_web_page_preview?: boolean;
-    }): Promise<Message> => this.request('sendMessage', props);
+    }): Promise<Message> => this.request('sendMessage', sanitizeMarkdownV2Props(props));
 
     public forwardMessage = async(props: {
         chat_id: number | string;
@@ -177,7 +178,7 @@ export class Bot
         reply_markup?: Markup;
         parse_mode?: ParseMode;
         disable_web_page_preview?: boolean;
-    }): Promise<Message> => this.request('sendPhoto', props);
+    }): Promise<Message> => this.request('sendPhoto', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendAudio = async(props: {
         chat_id: number | string;
@@ -188,7 +189,7 @@ export class Bot
         parse_mode?: ParseMode;
         disable_web_page_preview?: boolean;
         audio: SendFile;
-    }): Promise<Message> => this.request('sendAudio', props);
+    }): Promise<Message> => this.request('sendAudio', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendDocument = async(props: {
         chat_id: number | string;
@@ -200,7 +201,7 @@ export class Bot
         disable_web_page_preview?: boolean;
         document: SendFile;
         thumb?: SendFile;
-    }): Promise<Message> => this.request('sendDocument', props);
+    }): Promise<Message> => this.request('sendDocument', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendVideo = async(props: {
         chat_id: number | string;
@@ -216,7 +217,7 @@ export class Bot
         height?: number;
         thumb?: SendFile;
         supports_streaming?: boolean;
-    }): Promise<Message> => this.request('sendVideo', props);
+    }): Promise<Message> => this.request('sendVideo', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendAnimation = async(props: {
         chat_id: number | string;
@@ -231,7 +232,7 @@ export class Bot
         width?: number;
         height?: number;
         thumb?: SendFile;
-    }): Promise<Message> => this.request('sendAnimation', props);
+    }): Promise<Message> => this.request('sendAnimation', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendVoice = async(props: {
         chat_id: number | string;
@@ -243,15 +244,13 @@ export class Bot
         disable_web_page_preview?: boolean;
         voice: SendFile;
         duration?: number;
-    }): Promise<Message> => this.request('sendVoice', props);
+    }): Promise<Message> => this.request('sendVoice', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendVideoNote = async(props: {
         chat_id: number | string;
         disable_notification?: boolean;
         reply_to_message_id?: number;
         reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         video_note: SendFile;
         duration?: number;
         length?: number;
@@ -269,8 +268,6 @@ export class Bot
         disable_notification?: boolean;
         reply_to_message_id?: number;
         reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         latitude: number;
         longitude: number;
         live_period?: number;
@@ -289,7 +286,6 @@ export class Bot
         chat_id: number | string;
         disable_notification?: boolean;
         reply_to_message_id?: number;
-        parse_mode?: ParseMode;
         disable_web_page_preview?: boolean;
         message_id?: number;
         inline_message_id?: number;
@@ -301,8 +297,6 @@ export class Bot
         disable_notification?: boolean;
         reply_to_message_id?: number;
         reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         latitude: number;
         longitude: number;
         title: string;
@@ -316,8 +310,6 @@ export class Bot
         disable_notification?: boolean;
         reply_to_message_id?: number;
         reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         phone_number: string;
         first_name: string;
         last_name?: string;
@@ -406,7 +398,7 @@ export class Bot
         message_id?: number;
         inline_message_id?: number;
         caption: string;
-    }): Promise<Message | true> => this.request('editMessageCaption', props);
+    }): Promise<Message | true> => this.request('editMessageCaption', sanitizeMarkdownV2Props(props, 'caption'));
 
     public editMessageMedia = async(props: {
         chat_id: number | string;
