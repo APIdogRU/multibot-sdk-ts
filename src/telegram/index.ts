@@ -68,57 +68,41 @@ export class Bot
         return `${this.config.apiUrl}/bot${this.config.secret}/${method}`;
     };
 
-    private readonly handleMethodsForFiles: Record<string, string | undefined> = {
-        'sendPhoto': 'photo',
-        'sendAudio': 'audio',
-        'sendDocument': 'document',
-        'sendSticker': 'sticker',
-        'sendVideo': 'video',
-        'sendAnimation': 'animation',
-        'sendVideoNote': 'video_note',
-        'sendVoice': 'voice',
-        'setChatPhoto': 'file',
-/*        'uploadStickerFile',
-        'createNewStickerSet',
-        'addStickerToSet',*/
-        'sendMediaGroup': undefined
-    };
+    private createFormDataFromParams = (params: Record<string, unknown>) => {
+        return Object.entries(params).reduce((form, [key, value]) => {
+            if (value !== undefined) {
+                switch (typeof value) {
+                    case 'number':
+                    case 'boolean': {
+                        value = String(value);
+                        break;
+                    }
 
-    private handleParamsForFiles = (data: Record<string, unknown>, name: string) => {
-        const entry = data[name];
-
-        if (typeof entry === 'string') {
-            if (fs.existsSync(entry)) {
-                data[name] = fs.createReadStream(entry);
+                    case 'object': {
+                        value = JSON.stringify(value);
+                        break;
+                    }
+                }
+                form.append(key, value);
             }
-        }
+            return form;
+        }, new FormData());
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public request = async<T>(apiMethod: string, params: Record<string, any> = {}) => {
+    public request = async<T>(apiMethod: string, params: Record<string, unknown> = {}) => {
         type Result = {
             ok: boolean;
             result: T;
         };
 
-        if (apiMethod in this.handleMethodsForFiles) {
-            this.handleParamsForFiles(params, this.handleMethodsForFiles[apiMethod]);
-        }
+        const form = this.createFormDataFromParams(params);
 
-        const form = Object.keys(params).reduce((form, key) => {
-            if (params[key] !== undefined) {
-                const v = params[key];
-                form.append(key, typeof v === 'object' ? JSON.stringify(v) : v);
-            }
-            return form;
-        }, new FormData());
-
-        const endpoint = this.getApiEndpoint(apiMethod);
-
-        const { data, status, statusText } = await axios.post<Result>(endpoint, form, {
-            headers: {
-                ...(form.getHeaders())
-            }
+        const {
+            data,
+            status,
+            statusText
+        } = await axios.post<Result>(this.getApiEndpoint(apiMethod), form, {
+            headers: form.getHeaders(),
         });
 
         if (status !== 200) {
