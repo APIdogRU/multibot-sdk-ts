@@ -150,4 +150,5 @@ export class Bot
     };
 }
 
+export * from './matcher';
 export * from './utils';
