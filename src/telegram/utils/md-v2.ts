@@ -35,7 +35,8 @@ export class MarkdownV2 {
     public static sanitizeString = (text: string) => text.replace(/([_*[\]()~`>#+=|{}.!-])/ig, '\\$1');
 }
 
-export const sanitizeMarkdownV2Props = <T extends (Record<string, unknown> & { parse_mode?: ParseMode }) >(props: T, key = 'text'): T => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const sanitizeMarkdownV2Props = <T extends (Record<string, any> & { parse_mode?: ParseMode }) >(props: T, key = 'text'): T => {
     if (props.parse_mode === ParseMode.MarkdownV2) {
         (props as Record<string, string>)[key] = MarkdownV2.sanitizeString(props[key]);
     }
