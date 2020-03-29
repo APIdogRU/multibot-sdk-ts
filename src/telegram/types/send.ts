@@ -1,6 +1,10 @@
 import { Markup } from '.';
 
-export type ParseMode = 'Markdown' | 'MarkdownV2' | 'HTML';
+export const enum ParseMode {
+    Markdown = 'Markdown',
+    MarkdownV2 = 'MarkdownV2',
+    HTML = 'HTML'
+}
 
 export type BaseOption = {
     chat_id: number | string;

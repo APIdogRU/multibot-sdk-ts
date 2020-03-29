@@ -176,4 +176,6 @@ export class Bot
 
 }
 
+export { ParseMode } from './types/send';
+export * from './matcher';
 export * from './utils';
