@@ -36,4 +36,8 @@ describe('Telegram MarkdownV2 helper functions', () => {
     it('codeBlock', () => {
         expect(MarkdownV2.codeBlock('block')).toEqual('```block```');
     });
+
+    it('Sanitize string contains MarkdownV2', () => {
+        expect(MarkdownV2.sanitizeString('Test. #Test 2*2=4 | {} !')).toEqual('Test\\. \\#Test 2\\*2\\=4 \\| \\{\\} \\!');
+    })
 });
