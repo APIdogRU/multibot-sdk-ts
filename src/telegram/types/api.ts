@@ -1,9 +1,7 @@
 import { Stream } from 'stream';
-import { Update, WebhookInfo, User, UserProfilePhotos, Chat, ChatMember, BaseOption, SendMessageOptions, SendMediaOptions, ChatAction, ParseMode, Message, InputMediaPhoto, InputMediaVideo, QuizType, File, Poll, InlineKeyboard } from '.';
+import { Update, WebhookInfo, User, UserProfilePhotos, Chat, ChatMember, BaseOption, SendMessageOptions, SendMediaOptions, ChatAction, ParseMode, Message, InputMediaPhoto, InputMediaVideo, QuizType, File, Poll, InlineKeyboard, SendExtraOptions, GameHighScore } from '.';
+import { InlineQueryResult } from './inline-query';
 
-/**
- * SDK
- */
 export interface Config {
     secret: string;
     apiUrl?: string;
@@ -165,7 +163,7 @@ export interface Request {
 
     (method: 'getChat', params: BaseOption): Promise<Chat>;
 
-    // getChatAdministrators
+    (method: 'getChatAdministrators', params: BaseOption): Promise<ChatMember>;
 
     (method: 'getChatMembersCount', params: BaseOption): Promise<number>;
 
@@ -173,7 +171,14 @@ export interface Request {
 
     // setChatStickerSet
     // deleteChatStickerSet
-    // answerCallbackQuery
+
+    (method: 'answerCallbackQuery', params: {
+        callback_query_id: string;
+        text?: string;
+        show_alert?: boolean;
+        url?: string;
+        cache_time?: number;
+    }): Promise<true>;
 
     (method: 'editMessageText', params: BaseOption & SendMessageOptions & {
         message_id?: number;
@@ -208,20 +213,42 @@ export interface Request {
     (method: 'deleteMessage', params: BaseOption & {
         message_id: number;
     }): Promise<true>;
-/*
-    (method: '', params: BaseOption & {
 
-    }): Promise<Message>;
-*/
-    // (method: 'sendSticker', params: BaseOption & { sticker: string } & SendExtraOptions): Promise<Message>;
+    (method: 'sendSticker', params: BaseOption & { sticker: string } & SendExtraOptions): Promise<Message>;
 
     // getStickerSet
     // uploadStickerFile
     // createNewStickerSet
     // addStickerToSet
     // setStickerPositionInSet
-    // answerInlineQuery
-    // sendGame
-    // setGameScore
-    // getGameHighScores
+
+    (method: 'answerInlineQuery', params: {
+        inline_query_id: string;
+        results: InlineQueryResult[];
+        cache_time?: number;
+        is_personal?: boolean;
+        next_offset?: string;
+        switch_pm_text?: string;
+        switch_pm_parameter?: string;
+    }): Promise<true>;
+
+    (method: 'sendGame', params: BaseOption & {
+        game_short_name: string;
+    } & SendExtraOptions): Promise<Message>;
+
+    (method: 'setGameScore', params: Partial<BaseOption> & {
+        user_id: number;
+        score: number;
+        force?: boolean;
+        disable_edit_message?: boolean;
+        message_id?: number;
+        inline_message_id?: number;
+    }): Promise<Message | true>;
+
+    (method: 'getGameHighScores', params: {
+        user_id: number;
+        chat_id?: number;
+        message_id?: number;
+        inline_message_id?: number;
+    }): Promise<GameHighScore[]>;
 }

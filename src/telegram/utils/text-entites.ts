@@ -1,6 +1,6 @@
-import { Message, MessageEntity } from '../types';
+import { Message, MessageEntityWithText } from '../types';
 
-export const extractEntites = ({ text, caption, entities, caption_entities }: Message): (MessageEntity & { text: string })[] => {
+export const extractEntites = ({ text, caption, entities, caption_entities }: Message): MessageEntityWithText[] => {
     const items = entities || caption_entities || [];
     const str = text || caption || '';
 

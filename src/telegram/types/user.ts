@@ -7,6 +7,9 @@ export interface User {
     last_name?: string;
     username?: string;
     language_code?: string;
+    can_join_groups?: boolean;
+    can_read_all_group_messages?: boolean;
+    supports_inline_queries?: boolean;
 }
 
 export interface Chat {
@@ -21,8 +24,9 @@ export interface Chat {
     invite_link?: string;
     pinned_message?: Message;
     permissions?: ChatPermissions;
-    can_set_sticker_set?: boolean;
+    slow_mode_delay?: boolean;
     sticker_set_name?: string;
+    can_set_sticker_set?: boolean;
 }
 
 export type ChatType = 'private' | 'group' | 'supergroup' | 'channel';
