@@ -12,3 +12,5 @@ jobs:
         run: |
           npm ci
           npm t
+        env:
+          JEST_VK_TOKEN: ${{ secrets.JEST_VK_TOKEN }}
