@@ -3,6 +3,7 @@ import { User, UserDefaultKeys, UserNameCase, Message, Keyboard } from '.';
 export interface Config {
     token: string;
     groupId: number;
+    lang?: string;
     apiUrl?: string;
     apiVersion?: string;
 }
@@ -58,12 +59,12 @@ export interface ApiError {
     request_params: object[];
 }
 
-export interface Update {
+export interface UpdateWrap {
     ts: string;
-    updates: UpdateItem[];
+    updates: Update[];
 }
 
-export type UpdateItem = UpdateMessageNew
+export type Update = UpdateMessageNew
     | UpdateMessageNewLegacy
     | UpdateMessageReply
     | UpdateMessageEdit

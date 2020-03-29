@@ -1,16 +1,9 @@
-import AbstractBot, { IBotPolling, Listener } from '../abstract-bot';
+import AbstractBot, { IBotPolling } from '../abstract-bot';
 import * as FormData from 'form-data';
 import axios from 'axios';
-import { Config, LongPollProps, Request, Update, UpdateItem, Message, User, ClientInfo, UserFieldExtra } from './types';
-import { getSender } from './utils';
-
-export const enum Event {
-    Message = 'message',
-    MessageOut = 'message-reply',
-    MessageUpdate = 'message-update',
-    MessageAllow = 'message-allow',
-    MessageDeny = 'message-deny'
-}
+import { Config, LongPollProps, Request, UpdateWrap, Update, Message, User, ClientInfo } from './types';
+import { VkMatcher, MatchType } from './matcher';
+import { Listener } from '../utils';
 
 type ArgumentListener = {
     message: Message;
@@ -18,16 +11,16 @@ type ArgumentListener = {
     capability?: ClientInfo;
 };
 
-interface EventListener {
-    (event: Event.Message, listener: Listener<ArgumentListener & { capability?: ClientInfo }>): void;
-    (event: Event.MessageOut, listener: Listener<ArgumentListener>): void;
-    (event: Event.MessageUpdate, listener: Listener<ArgumentListener>): void;
-    (event: Event.MessageAllow, listener: Listener<Message>): void;
-    (event: Event.MessageDeny, listener: Listener<Message>): void;
+interface On {
+    (event: MatchType.Message, listener: Listener<ArgumentListener & { capability?: ClientInfo }>): void;
+    (event: MatchType.MessageOut, listener: Listener<ArgumentListener>): void;
+    (event: MatchType.MessageEdit, listener: Listener<ArgumentListener>): void;
+    (event: MatchType.MessageAllow, listener: Listener<Message>): void;
+    (event: MatchType.MessageDeny, listener: Listener<Message>): void;
 }
 
 export class Bot
-    extends AbstractBot<Config, Event, EventListener>
+    extends AbstractBot<Config, Update>
     implements IBotPolling {
 
     static readonly defaultConfig: Config = {
@@ -51,6 +44,7 @@ export class Bot
         }
 
         this.config = { ...Bot.defaultConfig, ...config };
+        this.setMatcher(new VkMatcher(this));
     }
 
     protected getApiEndpoint = (method: string) => `${this.config.apiUrl}/${method}`;
@@ -75,15 +69,17 @@ export class Bot
 
         form.append('access_token', this.config.token);
         form.append('v', this.config.apiVersion);
-console.log(form);
+        form.append('lang', this.config.lang ?? 'en');
+
         const endpoint = this.getApiEndpoint(apiMethod);
 
         const { data, status, statusText } = await axios.post<Response>(endpoint, form, {
+
             headers: {
                 ...(form.getHeaders())
             }
         });
-console.log(data);
+
         if (status !== 200) {
             throw new Error(`Error HTTP ${statusText}`);
         }
@@ -120,7 +116,7 @@ console.log(data);
     };
 
     private waitForResponseLongPoll = async() => {
-        return (await axios.get<Update>(this.getLongPollUrl())).data;
+        return (await axios.get<UpdateWrap>(this.getLongPollUrl())).data;
     };
 
     private poll = async() => new Promise(resolve => {
@@ -133,45 +129,20 @@ console.log(data);
         });
     });
 
-    private handleUpdate = (update: UpdateItem) => {
-        switch (update.type) {
-            case 'message_new': {
-                const args: Partial<ArgumentListener> = { };
-                const object = update.object;
+    private readonly events: Record<string, Listener[]> = {};
 
-                if ('message' in object) {
-                    args.message = object.message;
-                    args.capability = object.client_info;
-                } else {
-                    args.message = object;
-                }
-
-                args.getSender = async(fields: UserFieldExtra[] = []) => getSender(this, args.message, fields);
-
-                this.emit(Event.Message, args);
-                break;
-            }
-
-            case 'message_reply': {
-                this.emit(Event.MessageOut, update.object);
-                break;
-            }
-
-            case 'message_edit': {
-                this.emit(Event.MessageUpdate, update.object);
-                break;
-            }
-
-            case 'message_allow': {
-                this.emit(Event.MessageAllow, update.object);
-                break;
-            }
-
-            case 'message_deny': {
-                this.emit(Event.MessageDeny, update.object);
-                break;
-            }
+    public on: On = (event: MatchType, listener: never) => {
+        if (!this.events[event]) {
+            this.events[event] = [];
         }
+
+        this.events[event].push(listener);
+    };
+
+    private handleUpdate = (update: Update) => {
+        this.matcher.getMatches(update).forEach(match => {
+            this.events[match.type]?.forEach(callback => callback(match.handle(update)));
+        });
     };
 
     public stopPolling = () => {

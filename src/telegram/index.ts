@@ -1,30 +1,23 @@
 import * as fs from 'fs';
 import axios from 'axios';
 import * as FormData from 'form-data';
-import AbstractBot, { IBotPolling, Listener } from '../abstract-bot';
-import { Config, Request, User, Message, Update, CallbackQuery, AllowedUpdate, Chat, InlineQuery, ChosenInlineResult } from './types';
-import { fastReply } from './utils';
+import AbstractBot, { IBotPolling } from '../abstract-bot';
+import { Config, Request, User, Message, Update, CallbackQuery, Chat, InlineQuery, ChosenInlineResult, Location } from './types';
+import { TelegramMatcher, MatchType, MatchResultCommand } from './matcher';
+import { Listener } from '../utils';
 
-export const enum Event {
-    Message = 'message',
-    MessageEdited = 'message-edited',
-
-    ChannelPost = 'channel-post',
-    ChannelPostEdited = 'channel-post-edited',
-
-    CallbackQuery = 'callback-query',
-    InlineQuery = 'inline-query',
-    ChosenInlineResult = 'chosen-inline-result'
-}
-
-interface EventListener {
-    (event: Event.Message, listener: Listener<ArgumentMessage>): void;
-    (event: Event.MessageEdited, listener: Listener<ArgumentMessage>): void;
-    (event: Event.ChannelPost, listener: Listener<ArgumentMessage>): void;
-    (event: Event.ChannelPostEdited, listener: Listener<ArgumentMessage>): void;
-    (event: Event.CallbackQuery, listener: Listener<CallbackQuery>): void;
-    (event: Event.InlineQuery, listener: Listener<InlineQuery>): void;
-    (event: Event.ChosenInlineResult, listener: Listener<ChosenInlineResult>): void;
+interface On {
+    (event: MatchType.Message, listener: Listener<ArgumentMessage>): void;
+    (event: MatchType.MessageEdited, listener: Listener<ArgumentMessage>): void;
+    (event: MatchType.ChannelPost, listener: Listener<Message>): void;
+    (event: MatchType.ChannelPostEdited, listener: Listener<Message>): void;
+    (event: MatchType.CallbackQuery, listener: Listener<CallbackQuery>): void;
+    (event: MatchType.Exact, listener: Listener<Message>): void;
+    (event: MatchType.Command, listener: Listener<MatchResultCommand>): void;
+    (event: MatchType.InlineQuery, listener: Listener<InlineQuery>): void;
+    (event: MatchType.ChosenInlineResult, listener: Listener<ChosenInlineResult>): void;
+    (event: MatchType.Photo | MatchType.Video | MatchType.Audio | MatchType.Voice | MatchType.Animation | MatchType.Sticker, listener: Listener<ArgumentMessageWithFile>): void;
+    (event: MatchType.Location, listener: Listener<Location>): void;
 }
 
 /**
@@ -34,11 +27,17 @@ export type ArgumentMessage = {
     message: Message;
     sender: User;
     chat: Chat;
-    fastReply: (text: string) => void;
 };
 
+/**
+ * Message argument with file
+ */
+export interface ArgumentMessageWithFile extends ArgumentMessage {
+    getFileUrl(): Promise<string>;
+}
+
 export class Bot
-    extends AbstractBot<Config, Event, EventListener>
+    extends AbstractBot<Config, Update>
     implements IBotPolling {
 
     static readonly defaultConfig: Config = {
@@ -54,6 +53,7 @@ export class Bot
         }
 
         this.config = { ...Bot.defaultConfig, ...config };
+        this.setMatcher(new TelegramMatcher(this));
     }
 
     protected getApiEndpoint = (method: string) => {
@@ -120,48 +120,20 @@ export class Bot
         return data.result;
     };
 
-    private readonly handleEventWith: Record<AllowedUpdate, Event> = {
-        message: Event.Message,
-        edited_message: Event.MessageEdited,
-        channel_post: Event.ChannelPost,
-        edited_channel_post: Event.ChannelPostEdited,
-        inline_query: Event.InlineQuery,
-        callback_query: Event.CallbackQuery,
-        chosen_inline_result: Event.ChosenInlineResult,
+    private readonly events: Record<string, Listener[]> = {};
+
+    public on: On = (event: MatchType, listener: never) => {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+
+        this.events[event].push(listener);
     };
 
-    /**
-     *
-     */
     private handleUpdate = (update: Update) => {
-        const type = Object.keys(update).filter(v => v !== 'update_id')[0] as AllowedUpdate;
-        const eventType = this.handleEventWith[type];
-
-        switch (eventType) {
-            case Event.Message:
-            case Event.MessageEdited:
-            case Event.ChannelPost:
-            case Event.ChannelPostEdited: {
-                const message = update[type] as Message;
-                this.emit(eventType, {
-                    message,
-                    sender: message.from,
-                    chat: message.chat,
-                    fastReply: text => fastReply(this, message, text),
-                } as ArgumentMessage);
-                break;
-            }
-
-            case Event.CallbackQuery: {
-                this.emit(Event.CallbackQuery, update.callback_query);
-                break;
-            }
-
-            case Event.InlineQuery: {
-                this.emit(Event.InlineQuery, update.inline_query);
-                break;
-            }
-        }
+        this.matcher.getMatches(update).forEach(match => {
+            this.events[match.type]?.forEach(callback => callback(match.handle(update)));
+        });
     };
 
     /**

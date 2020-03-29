@@ -1,15 +1,14 @@
 module.exports = {
-
     projects: [
         {
             preset: 'ts-jest',
             displayName: {
-                name: ' Utils  ',
-                color: 'orange',
+                name: ' Common ',
+                color: 'yellow',
             },
             testMatch: [
-                '<rootDir>/src/utils/*.test.ts'
-            ]
+                '<rootDir>/src/utils/*.test.ts',
+            ],
         },
         {
             preset: 'ts-jest',
@@ -18,8 +17,8 @@ module.exports = {
                 color: 'cyan',
             },
             testMatch: [
-                '<rootDir>/src/telegram/**/*.test.ts'
-            ]
+                '<rootDir>/src/telegram/**/*.test.ts',
+            ],
         },
         {
             preset: 'ts-jest',
@@ -27,9 +26,10 @@ module.exports = {
                 name: '   VK   ',
                 color: 'blue',
             },
+            testEnvironment: 'node',
             testMatch: [
-                '<rootDir>/src/vk/**/*.test.ts'
-            ]
+                '<rootDir>/src/vk/**/*.test.ts',
+            ],
         }
     ]
 };
