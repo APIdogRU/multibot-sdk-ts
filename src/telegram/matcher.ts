@@ -122,7 +122,7 @@ export type MatchMedia = {
     type: string;
     object: Media;
 };
-const testMedia: MTest = update => mediaTypes.some(key => key in update.message);
+const testMedia: MTest = update => mediaTypes.some(key => testMessage(update) && key in update.message);
 const handleMedia: MHandle = update => {
     const type = mediaTypes.find(type => type in update.message);
     return {
