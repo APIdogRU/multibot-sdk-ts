@@ -4,7 +4,7 @@ import { Matcher, MatchHandle, MatchTest } from '../utils';
 import { IBot } from '../abstract-bot';
 import { Bot, ArgumentMessage } from '.';
 
-export const enum MatchType {
+export enum MatchType {
     Message = 'message',
     MessageEdited = 'message_edited',
     ChannelPost = 'channel_post',
@@ -27,7 +27,7 @@ export const enum MatchType {
     Contact = 'contact',
     Poll = 'poll',
     Game = 'game',
-    VideoNote = 'videoNote',
+    VideoNote = 'video_note',
     Media = 'media'
 }
 
