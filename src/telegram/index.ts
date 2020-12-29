@@ -497,7 +497,7 @@ export class Bot
         this.isPollingActive = false;
     };
 
-    private poll = async() => new Promise(resolve => {
+    private poll = async() => new Promise<void>(resolve => {
         this.getUpdates({
             offset: this.pollingOffset
         }).then(response => {
@@ -505,7 +505,7 @@ export class Bot
                 this.pollingOffset = response[response.length - 1].update_id + 1;
             }
 
-            resolve();
+            resolve(void 0);
 
             response.forEach(this.handleUpdate);
         });

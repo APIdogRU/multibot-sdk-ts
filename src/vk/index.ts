@@ -123,7 +123,7 @@ export class Bot
         this.waitForResponseLongPoll().then(response => {
             this.server.ts = response.ts;
 
-            resolve();
+            resolve(void 0);
 
             response.updates.forEach(this.handleUpdate);
         });
