@@ -1,4 +1,6 @@
 import { Location, User, InlineKeyboard } from '.';
+import { MessageEntity } from './message';
+import { ParseMode } from './send';
 
 export interface InlineQuery {
     id: string;
@@ -207,25 +209,64 @@ export interface InlineQueryResultCachedAudio extends InlineQueryResultBase {
     input_message_content?: InputMessageContent;
 }
 
-export type InputMessageContent = object;
+export type InputTextMessageContent = {
+    message_text: string;
+    parse_mode?: ParseMode;
+    entities?: MessageEntity[];
+    disable_web_page_preview?: boolean;
+};
+
+export type InputLocationMessageContent = {
+    latitude: number;
+    longitude: number;
+    horizontal_accuracy?: number;
+    live_period?: number;
+    heading?: number;
+    proximity_alert_radius?: number;
+};
+
+export type InputVenueMessageContent = {
+    latitude: number;
+    longitude: number;
+    title: string;
+    address: string;
+    foursquare_id?: string;
+    foursquare_type?: string;
+    google_place_id?: string;
+    google_place_type?: string;
+};
+
+export type InputContactMessageContent = {
+    phone_number: string;
+    first_name: string;
+    last_name?: string;
+    vcard?: string;
+};
+
+export type InputMessageContent = 
+    | InputTextMessageContent
+    | InputLocationMessageContent
+    | InputVenueMessageContent
+    | InputContactMessageContent;
+
 export type InlineQueryResult =
-    InlineQueryResultCachedAudio |
-    InlineQueryResultCachedDocument |
-    InlineQueryResultCachedGif |
-    InlineQueryResultCachedMpeg4Gif |
-    InlineQueryResultCachedPhoto |
-    InlineQueryResultCachedSticker |
-    InlineQueryResultCachedVideo |
-    InlineQueryResultCachedVoice |
-    InlineQueryResultArticle |
-    InlineQueryResultAudio |
-    InlineQueryResultContact |
-    InlineQueryResultGame |
-    InlineQueryResultDocument |
-    InlineQueryResultGif |
-    InlineQueryResultLocation |
-    InlineQueryResultMpeg4Gif |
-    InlineQueryResultPhoto |
-    InlineQueryResultVenue |
-    InlineQueryResultVideo |
-    InlineQueryResultVoice;
+    | InlineQueryResultCachedAudio
+    | InlineQueryResultCachedDocument
+    | InlineQueryResultCachedGif
+    | InlineQueryResultCachedMpeg4Gif
+    | InlineQueryResultCachedPhoto
+    | InlineQueryResultCachedSticker
+    | InlineQueryResultCachedVideo
+    | InlineQueryResultCachedVoice
+    | InlineQueryResultArticle
+    | InlineQueryResultAudio
+    | InlineQueryResultContact
+    | InlineQueryResultGame
+    | InlineQueryResultDocument
+    | InlineQueryResultGif
+    | InlineQueryResultLocation
+    | InlineQueryResultMpeg4Gif
+    | InlineQueryResultPhoto
+    | InlineQueryResultVenue
+    | InlineQueryResultVideo
+    | InlineQueryResultVoice;
