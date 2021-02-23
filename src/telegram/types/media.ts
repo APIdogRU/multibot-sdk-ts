@@ -75,6 +75,10 @@ export interface Sticker {
 export interface Location {
     longitude: number;
     latitude: number;
+    horizontal_accuracy?: number;
+    live_period?: number;
+    heading?: number;
+    proximity_alert_radius?: number;
 }
 
 export interface Venue {
@@ -83,6 +87,8 @@ export interface Venue {
     address: string;
     foursquare_id?: string;
     foursquare_type?: string;
+    google_place_id?: string;
+    google_place_type?: string;
 }
 
 export interface Contact {
@@ -114,6 +120,10 @@ export interface Poll {
     type: QuizType;
     allows_multiple_answers?: boolean;
     correct_option_id?: number;
+    explanation?: string;
+    explanation_entities?: MessageEntity[];
+    open_period?: number;
+    close_date?: number;
 }
 
 export interface Game {
@@ -173,3 +183,14 @@ export interface InputMediaAnimation extends InputMediaBase {
 }
 
 export type QuizType = 'quiz' | 'regular';
+
+export type Dice = {
+    emoji: string;
+    value: number;
+};
+
+export type ProximityAlertTriggered = {
+    traveler: User;
+    watcher: User;
+    distance: number;
+};

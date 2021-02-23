@@ -16,10 +16,10 @@ const bot = new Telegram.Bot({
     secret: '...', // secret key
 });
 
-bot.on('message', ({ message, sender, chat }) => {
+bot.on(Telegram.MatchType.Message, ({ message, from, chat }) => {
     bot.request('sendMessage', {
         chat_id: chat.id,
-        text: `Hello, ${sender.first_name}!`,
+        text: `Hello, ${from.first_name}!`,
     });
 });
 
@@ -34,6 +34,8 @@ List of available keyboards:
 
 #### Example:
 ```typescript
+import { Telegram } from '@apidog/multibot-sdk-ts';
+
 const kb = new Telegram.ReplyKeyboardBuilder();
 const row = kb.addRow(); // add row
 row.addButton(new Telegram.ReplyKeyboardButton('Click me!'));

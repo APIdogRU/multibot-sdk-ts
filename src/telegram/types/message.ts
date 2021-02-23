@@ -1,10 +1,10 @@
-import { User, Chat, Markup, PhotoSize, Video, Audio, Document, Animation, Voice, Sticker, Location, Venue, Contact, Poll, Game } from '.';
+import { User, Chat, Markup, PhotoSize, Video, Audio, Document, Animation, Voice, Sticker, Location, Venue, Contact, Poll, Game, Dice, ProximityAlertTriggered } from '.';
 
 export interface Message {
     message_id: number;
-    from?: User;
+    from: User;
+    sender_chat?: Chat;
     date: number;
-    edit_date?: number;
     chat: Chat;
     forward_from?: User;
     forward_from_chat?: Chat;
@@ -14,6 +14,8 @@ export interface Message {
     forward_date?: number;
     reply_to_message?: Message;
     reply_markup?: Markup;
+    via_bot?: User;
+    edit_date?: number;
 
     media_group_id?: string;
     author_signature?: string;
@@ -34,6 +36,8 @@ export interface Message {
     contact?: Contact;
     poll?: Poll;
     game?: Game;
+    dice?: Dice;
+    proximity_alert_triggered?: ProximityAlertTriggered;
 
     new_chat_members?: User[];
     left_chat_member?: User;
@@ -41,6 +45,7 @@ export interface Message {
     new_chat_photo?: PhotoSize[];
     delete_chat_photo?: boolean;
     group_chat_created?: boolean;
+    connected_website?: string;
 }
 
 export interface MessageEntity {

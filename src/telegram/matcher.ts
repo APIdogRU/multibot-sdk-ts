@@ -1,4 +1,4 @@
-import { Update, Media, Message } from './types';
+import { Update, Media, Message, FileBase } from './types';
 import { extractEntites } from './utils';
 import { Matcher, MatchHandle, MatchTest } from '../utils';
 import { IBot } from '../abstract-bot';
@@ -35,19 +35,11 @@ type MTest = MatchTest<Update>;
 type MHandle = MatchHandle<Update>;
 
 export const testMessage: MTest = update => 'message' in update;
-export const handleMessage: MHandle = ({ message }) => ({
-    message: message,
-    chat: message.chat,
-    from: message.from
-});
+export const handleMessage: MHandle = ({ message }) => message;
 
 
 export const testMessageEdited: MTest = update => 'message_edited' in update;
-export const handleMessageEdited: MHandle = ({ edited_message }) => ({
-    message: edited_message,
-    chat: edited_message.chat,
-    from: edited_message.from
-});
+export const handleMessageEdited: MHandle = ({ edited_message }) => edited_message;
 
 export const testChannelPost: MTest = update => 'channel_post' in update;
 export const handleChannelPost: MHandle = update => update.channel_post;
@@ -113,7 +105,11 @@ const media = (field: string): { test: MTest; handle: MHandle } => ({
     test: update => testMessage(update) && field in update.message,
     handle: (update, bot: Bot) => ({
         ...handleMessage(update) as object,
-        getFileUrl: () => bot.request('getFile', { file_id: update.message.photo[0].file_id })
+        getFileUrl: () => bot.request('getFile', {
+            file_id: ['photo', 'new_chat_photo'].includes(field)
+                ? update.message.photo[0].file_id
+                : (update.message[field as keyof Message] as FileBase).file_id,
+        }),
     }),
 });
 

@@ -1,8 +1,7 @@
-import * as fs from 'fs';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import AbstractBot, { IBotPolling } from '../abstract-bot';
-import { User, Message, Update, CallbackQuery, Chat, InlineQuery, ChosenInlineResult, Location, WebhookInfo, ParseMode, ChatAction, UserProfilePhotos, File, Markup, ChatMember, InlineQueryResult, GameHighScore, InlineKeyboard, InputMediaVideo, InputMediaPhoto, QuizType, Poll } from './types';
+import { User, Message, Update, CallbackQuery, Chat, InlineQuery, ChosenInlineResult, Location, WebhookInfo, ParseMode, ChatAction, UserProfilePhotos, File, Markup, ChatMember, InlineQueryResult, GameHighScore, InlineKeyboard, InputMediaVideo, InputMediaPhoto, QuizType, Poll, MessageEntity, BotCommand } from './types';
 import { TelegramMatcher, MatchType, MatchResultCommand } from './matcher';
 import { Listener } from '../utils';
 import { sanitizeMarkdownV2Props } from './utils';
@@ -13,8 +12,8 @@ export interface Config {
 }
 
 interface On {
-    (event: MatchType.Message, listener: Listener<ArgumentMessage>): void;
-    (event: MatchType.MessageEdited, listener: Listener<ArgumentMessage>): void;
+    (event: MatchType.Message, listener: Listener<Message>): void;
+    (event: MatchType.MessageEdited, listener: Listener<Message>): void;
     (event: MatchType.ChannelPost, listener: Listener<Message>): void;
     (event: MatchType.ChannelPostEdited, listener: Listener<Message>): void;
     (event: MatchType.CallbackQuery, listener: Listener<CallbackQuery>): void;
@@ -22,7 +21,9 @@ interface On {
     (event: MatchType.Command, listener: Listener<MatchResultCommand>): void;
     (event: MatchType.InlineQuery, listener: Listener<InlineQuery>): void;
     (event: MatchType.ChosenInlineResult, listener: Listener<ChosenInlineResult>): void;
-    (event: MatchType.Photo | MatchType.Video | MatchType.Audio | MatchType.Voice | MatchType.Animation | MatchType.Sticker, listener: Listener<ArgumentMessageWithFile>): void;
+    (event: MatchType.Photo | MatchType.Video | MatchType.Audio | MatchType.Voice | MatchType.Animation | MatchType.Sticker, listener: Listener<Message & {
+        getFileUrl: () => Promise<string>;
+    }>): void;
     (event: MatchType.Location, listener: Listener<Location>): void;
 }
 
@@ -31,29 +32,20 @@ interface On {
  */
 export type ArgumentMessage = {
     message: Message;
-    sender: User;
+    from: User;
     chat: Chat;
 };
 
-/**
- * Message argument with file
- */
-export interface ArgumentMessageWithFile extends ArgumentMessage {
-    getFileUrl(): Promise<string>;
-}
-
 export type SendFile = string | Buffer;
 
-export class Bot
-    extends AbstractBot<Config, Update>
-    implements IBotPolling {
+export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
 
-    static readonly defaultConfig: Config = {
+    private static readonly defaultConfig: Config = {
         secret: 'never_used',
         apiUrl: 'https://api.telegram.org',
     };
 
-    constructor(config: Config) {
+    public constructor(config: Config) {
         super();
 
         if (!config.secret) {
@@ -64,11 +56,11 @@ export class Bot
         this.setMatcher(new TelegramMatcher(this));
     }
 
-    protected getApiEndpoint = (method: string) => {
+    protected getApiEndpoint = (method: string): string => {
         return `${this.config.apiUrl}/bot${this.config.secret}/${method}`;
     };
 
-    private createFormDataFromParams = (params: Record<string, unknown>) => {
+    private createFormDataFromParams = (params: Record<string, unknown>): FormData => {
         return Object.entries(params).reduce((form, [key, value]) => {
             if (value !== undefined) {
                 switch (typeof value) {
@@ -89,7 +81,7 @@ export class Bot
         }, new FormData());
     };
 
-    public request = async<T>(apiMethod: string, params: Record<string, unknown> = {}) => {
+    public request = async<T>(apiMethod: string, params: Record<string, unknown> = {}): Promise<T> => {
         type Result = {
             ok: boolean;
             result: T;
@@ -139,12 +131,27 @@ export class Bot
     public sendMessage = async(props: {
         chat_id: number | string;
         text: string;
+        parse_mode?: ParseMode;
+        entities?: MessageEntity[];
+        disable_web_page_preview?: boolean;
         disable_notification?: boolean;
         reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
         reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
     }): Promise<Message> => this.request('sendMessage', sanitizeMarkdownV2Props(props));
+
+    public copyMessage = async(props: {
+        chat_id: number | string;
+        from_chat_id: number | string;
+        message_id: number;
+        caption?: string;
+        parse_mode?: ParseMode;
+        caption_entities?: MessageEntity[];
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
+    }): Promise<Message> => this.request('copyMessage', sanitizeMarkdownV2Props(props, 'caption'));
 
     public forwardMessage = async(props: {
         chat_id: number | string;
@@ -155,106 +162,124 @@ export class Bot
 
     public sendPhoto = async(props: {
         chat_id: number | string;
-        caption: string;
         photo: SendFile;
+        caption: string;
+        parse_mode?: ParseMode;
+        caption_entities?: MessageEntity[];
         disable_notification?: boolean;
         reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
         reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
     }): Promise<Message> => this.request('sendPhoto', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendAudio = async(props: {
         chat_id: number | string;
+        audio: SendFile;
         caption?: string;
+        parse_mode?: ParseMode;
+        caption_entities?: MessageEntity[];
+        duration?: number;
+        performer?: string;
+        title?: string;
+        thumb?: SendFile;
         disable_notification?: boolean;
         reply_to_message_id?: number;
-        reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
-        audio: SendFile;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;        
     }): Promise<Message> => this.request('sendAudio', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendDocument = async(props: {
         chat_id: number | string;
+        document: SendFile;
+        thumb?: SendFile;
         caption?: string;
+        parse_mode?: ParseMode;
+        caption_entities?: MessageEntity[];
+        disable_content_type_detection?: boolean;
         disable_notification?: boolean;
         reply_to_message_id?: number;
         reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
-        document: SendFile;
-        thumb?: SendFile;
+        allow_sending_without_reply?: boolean
     }): Promise<Message> => this.request('sendDocument', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendVideo = async(props: {
         chat_id: number | string;
-        caption?: string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         video: SendFile;
         duration?: number;
         width?: number;
         height?: number;
         thumb?: SendFile;
+        caption?: string;
+        parse_mode?: ParseMode;
+        caption_entities?: MessageEntity[];
         supports_streaming?: boolean;
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message> => this.request('sendVideo', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendAnimation = async(props: {
         chat_id: number | string;
-        caption?: string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         animation: SendFile;
         duration?: number;
         width?: number;
         height?: number;
         thumb?: SendFile;
+        caption?: string;
+        parse_mode?: ParseMode;
+        caption_entities?: MessageEntity[];
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message> => this.request('sendAnimation', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendVoice = async(props: {
         chat_id: number | string;
-        caption?: string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         voice: SendFile;
         duration?: number;
+        caption?: string;
+        parse_mode?: ParseMode;
+        caption_entities?: MessageEntity[];
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message> => this.request('sendVoice', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendVideoNote = async(props: {
         chat_id: number | string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
         video_note: SendFile;
         duration?: number;
         length?: number;
         thumb?: SendFile;
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message> => this.request('sendVideoNote', props);
 
     public sendMediaGroup = async(props: {
         chat_id: number | string;
         media: (InputMediaPhoto | InputMediaVideo)[];
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
     }): Promise<Message> => this.request('sendMediaGroup', props);
 
     public sendLocation = async(props: {
         chat_id: number | string;
-        caption?: string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
         latitude: number;
         longitude: number;
+        horizontal_accuracy?: number;
         live_period?: number;
+        heading?: number;
+        proximity_alert_radius?: number;
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message> => this.request('sendLocation', props);
 
     public editMessageLiveLocation = async(props: {
@@ -263,14 +288,14 @@ export class Bot
         inline_message_id?: number;
         latitude: number;
         longitude: number;
+        horizontal_accuracy?: number;
+        heading?: number;
+        proximity_alert_radius?: number;
         reply_markup?: InlineKeyboard;
     }): Promise<Message> => this.request('editMessageLiveLocation', props);
 
     public stopMessageLiveLocation = async(props: {
         chat_id: number | string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        disable_web_page_preview?: boolean;
         message_id?: number;
         inline_message_id?: number;
         reply_markup?: InlineKeyboard;
@@ -278,45 +303,60 @@ export class Bot
 
     public sendVenue = async(props: {
         chat_id: number | string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
         latitude: number;
         longitude: number;
         title: string;
         address: string;
         foursquare_id?: string;
         foursquare_type?: string;
+        google_place_id?: string;
+        google_place_tye?: string;
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message> => this.request('sendVenue', props);
 
     public sendContact = async(props: {
         chat_id: number | string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
         phone_number: string;
         first_name: string;
         last_name?: string;
         vcard?: string;
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message> => this.request('sendContact', props);
 
     public sendPoll = async(props: {
         chat_id: number | string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         question: string;
         options: string[];
         is_anonymous?: boolean;
         type?: QuizType;
         allows_multiple_answers?: boolean;
         correct_option_id?: number;
+        explanation?: string;
+        explanation_parse_mode?: ParseMode;
+        explanation_entities?: MessageEntity[];
+        open_period?: number;
+        close_date?: number;
         is_closed?: boolean;
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message> => this.request('sendPoll', props);
 
-    // ...
+    public sendDice = async(props: {
+        chat_id: number | string;
+        emoji: string; // "🎲" | "🎯" | "🏀" | "⚽" | "🎰"
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
+    }): Promise<Message> => this.request('sendDice', props);
 
     public sendChatAction = async(props: {
         chat_id: number | string;
@@ -331,7 +371,21 @@ export class Bot
 
     public getFile = async(props: { file_id: string }): Promise<File> => this.request('getFile', props);
 
-    // ...
+    // kickChatMember
+    // unbanChatMember
+    // restrictChatMember
+    // promoteChatMember
+    // setChatAdministratorCustomTitle
+    // setChatPermissions
+    // exportChatInviteLink
+    // setChatPhoto
+    // deleteChatPhoto
+    // setChatTitle
+    // setChatDescription
+    // pinChatMessage
+    // unpinChatMessage
+    // unpinAllChatMessages
+    // leaveChat
 
     public getChat = async(props: {
         chat_id: number | string;
@@ -350,7 +404,8 @@ export class Bot
         user_id: number;
     }): Promise<ChatMember> => this.request('getChatMember', props);
 
-    // ...
+    // setChatStickerSet
+    // deleteChatStickerSet
 
     public answerCallbackQuery = async(props: {
         callback_query_id: string;
@@ -360,28 +415,31 @@ export class Bot
         cache_time?: number;
     }): Promise<true> => this.request('answerCallbackQuery', props);
 
+    public setMyCommands = async(props: {
+        commands: BotCommand[];
+    }): Promise<true> => this.request('setMyCommands', props);
+
+    public getMyCommands = async(): Promise<BotCommand[]> => this.request('getMyCommands');
+
     public editMessageText = async(props: {
         chat_id: number | string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         message_id?: number;
         inline_message_id?: number;
         text: string;
+        parse_mode?: ParseMode;
+        entities?: MessageEntity[];    
+        disable_web_page_preview?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message | true> => this.request('editMessageText', props);
 
     public editMessageCaption = async(props: {
         chat_id: number | string;
-        disable_notification?: boolean;
-        reply_to_message_id?: number;
-        reply_markup?: Markup;
-        parse_mode?: ParseMode;
-        disable_web_page_preview?: boolean;
         message_id?: number;
         inline_message_id?: number;
         caption: string;
+        parse_mode?: ParseMode;
+        caption_entities?: MessageEntity[];
+        reply_markup?: Markup;        
     }): Promise<Message | true> => this.request('editMessageCaption', sanitizeMarkdownV2Props(props, 'caption'));
 
     public editMessageMedia = async(props: {
@@ -412,13 +470,20 @@ export class Bot
 
     public sendSticker = async(props: {
         chat_id: number | string;
-        sticker: string;
+        sticker: SendFile;
         disable_notification?: boolean;
         reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
         reply_markup?: Markup;
     }): Promise<Message> => this.request('sendSticker', props);
 
-    // ...
+    // getStickerSet
+    // uploadStickerFile
+    // createNewStickerSet
+    // addStickerToSet
+    // setStickerPositionInSet
+    // deleteStickerFromSet
+    // setStickerSetThumb
 
     public answerInlineQuery = async(props: {
         inline_query_id: string;
@@ -430,17 +495,24 @@ export class Bot
         switch_pm_parameter?: string;
     }): Promise<true> => this.request('answerInlineQuery', props);
 
+    // Payments all
+    // Telegram Passport all
+
     public sendGame = async(props: {
         chat_id: number | string;
         game_short_name: string;
+        disable_notification?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: Markup;
     }): Promise<Message> => this.request('sendGame', props);
 
     public setGameScore = async(props: {
-        chat_id: number | string;
         user_id: number;
         score: number;
         force?: boolean;
         disable_edit_message?: boolean;
+        chat_id?: number | string;
         message_id?: number;
         inline_message_id?: number;
     }): Promise<Message | true> => this.request('setGameScore', props);
@@ -459,15 +531,17 @@ export class Bot
 
     private readonly events: Record<string, Listener[]> = {};
 
-    public on: On = (event: MatchType, listener: never) => {
+    public on: On = (event: MatchType, listener: never): this => {
         if (!this.events[event]) {
             this.events[event] = [];
         }
 
         this.events[event].push(listener);
+
+        return this;
     };
 
-    private handleUpdate = (update: Update) => {
+    private handleUpdate = (update: Update): void => {
         this.matcher.getMatches(update).forEach(match => {
             this.events[match.type]?.forEach(callback => callback(match.handle(update)));
         });
@@ -479,7 +553,7 @@ export class Bot
     private isPollingActive = false;
     private pollingOffset: number | undefined;
 
-    public startPolling = () => {
+    public startPolling = (): void => {
         if (this.isPollingActive) {
             return;
         }
@@ -493,26 +567,24 @@ export class Bot
         })();
     };
 
-    public stopPolling = () => {
+    public stopPolling = (): void => {
         this.isPollingActive = false;
     };
 
-    private poll = async() => new Promise<void>(resolve => {
-        this.getUpdates({
-            offset: this.pollingOffset
-        }).then(response => {
-            if (response.length) {
-                this.pollingOffset = response[response.length - 1].update_id + 1;
-            }
+    private poll = async(): Promise<void> => new Promise<void>(resolve => {
+        this.getUpdates({ offset: this.pollingOffset })
+            .then(response => {
+                if (response.length) {
+                    this.pollingOffset = response[response.length - 1].update_id + 1;
+                }
 
-            resolve(void 0);
+                resolve(void 0);
 
-            response.forEach(this.handleUpdate);
-        });
+                response.forEach(this.handleUpdate);
+            });
     });
-
 }
 
-export { ParseMode } from './types/send';
+export * from './types';
 export * from './matcher';
 export * from './utils';

@@ -1,3 +1,5 @@
+import { QuizType } from "./media";
+
 export interface Markup {
 
 }
@@ -20,11 +22,16 @@ export interface ReplyKeyboard extends Markup {
 export interface ReplyKeyboardButton extends KeyboardButton {
     request_contact?: boolean;
     request_location?: boolean;
+    request_poll?: KeyboardButtonPollType;
 }
 
 export interface KeyboardRemoveMarkup extends Markup {
     remove_keyboard: boolean;
     selective?: boolean;
+}
+
+export type KeyboardButtonPollType = {
+    type?: QuizType;
 }
 
 /**
