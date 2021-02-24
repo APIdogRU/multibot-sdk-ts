@@ -1,6 +1,6 @@
 import { User, Chat, Markup, PhotoSize, Video, Audio, Document, Animation, Voice, Sticker, Location, Venue, Contact, Poll, Game, Dice, ProximityAlertTriggered } from '.';
 
-export interface Message {
+export type Message = {
     message_id: number;
     from: User;
     sender_chat?: Chat;
@@ -46,16 +46,16 @@ export interface Message {
     delete_chat_photo?: boolean;
     group_chat_created?: boolean;
     connected_website?: string;
-}
+};
 
-export interface MessageEntity {
+export type MessageEntity = {
     type: MessageEntityType;
     offset: number;
     length: number;
     url?: string;
     user?: User;
     language?: string;
-}
+};
 
 export interface MessageEntityWithText extends MessageEntity {
     text: string;

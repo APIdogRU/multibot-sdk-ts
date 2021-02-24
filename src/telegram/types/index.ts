@@ -1,4 +1,3 @@
-export * from './api';
 export * from './common';
 export * from './inline-query';
 export * from './keyboard';

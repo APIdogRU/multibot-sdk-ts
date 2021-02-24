@@ -1,11 +1,19 @@
-import * as reply from './reply';
-import * as inline from './inline';
-import * as force from './force';
-import * as remove from './remove';
+import type { KeyboardButton, Markup } from '../../types/keyboard';
 
-export {
-    reply,
-    inline,
-    force,
-    remove,
+export * from './reply';
+export * from './inline';
+export * from './force';
+export * from './remove';
+export * from './abstract';
+
+export type IKeyboardBuilder = {
+    build(): Markup;
+};
+
+export type IKeyboardRow = {
+    build(): KeyboardButton[];
+};
+
+export type IKeyboardButton = {
+    build(): KeyboardButton;
 };

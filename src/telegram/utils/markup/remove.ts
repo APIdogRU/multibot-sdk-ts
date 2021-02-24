@@ -1,10 +1,11 @@
 import { MarkupBuilder } from './abstract';
+import type { KeyboardRemoveMarkup } from '../../types';
 
-type KeyboardRemoveProps = {
-    selective?: boolean;
-};
-
-// KeyboardRemoveMarkup
-export class Builder extends MarkupBuilder<KeyboardRemoveProps> {
-    public build = () => ({ remove_keyboard: true, ...this.props });
+export class RemoveKeyboardBuilder extends MarkupBuilder<KeyboardRemoveMarkup, 'remove_keyboard'> {
+    public build(): KeyboardRemoveMarkup {
+        return {
+            remove_keyboard: true,
+            ...this.props,
+        };
+    }
 }

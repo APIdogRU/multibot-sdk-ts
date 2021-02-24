@@ -1,10 +1,11 @@
 import { MarkupBuilder } from './abstract';
+import type { ForceReplyMarkup } from '../../types';
 
-type ForceReplyProps = {
-    selective?: boolean;
-};
-
-// ForceReplyMarkup
-export class Builder extends MarkupBuilder<ForceReplyProps> {
-    public build = () => ({ force_reply: true, ...this.props });
+export class ForceReplyKeyboardBuilder extends MarkupBuilder<ForceReplyMarkup> {
+    public build(): ForceReplyMarkup {
+        return {
+            force_reply: this.props.force_reply ?? true,
+            selective: this.props.selective,
+        };
+    }
 }

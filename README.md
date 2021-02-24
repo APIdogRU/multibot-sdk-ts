@@ -31,6 +31,7 @@ List of available keyboards:
 * ReplyKeyboard;
 * InlineKeyboard;
 * ForceReply;
+* RemoveKeyboard.
 
 #### Example:
 ```typescript
@@ -38,7 +39,7 @@ import { Telegram } from '@apidog/multibot-sdk-ts';
 
 const kb = new Telegram.ReplyKeyboardBuilder();
 const row = kb.addRow(); // add row
-row.addButton(new Telegram.ReplyKeyboardButton('Click me!'));
+row.addButton(new Telegram.ReplyButton('Click me!'));
 
 bot.request('sendMessage', {
     // ...

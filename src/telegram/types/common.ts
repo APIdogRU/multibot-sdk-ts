@@ -1,8 +1,8 @@
 import { Message, InlineQuery, User, Location } from '.';
 
-export type AllowedUpdate = (Exclude<keyof Update, 'update_id'>);
+export type AllowedUpdate = Exclude<keyof Update, 'update_id'>;
 
-export interface WebhookInfo {
+export type WebhookInfo = {
     url: string;
     has_custom_certificate: boolean;
     pending_update_count: number;
@@ -10,9 +10,9 @@ export interface WebhookInfo {
     last_error_message: string;
     nax_connections: number;
     allowed_updates?: AllowedUpdate[];
-}
+};
 
-export interface Update {
+export type Update = {
     update_id: number;
     message?: Message;
     edited_message?: Message;
@@ -21,17 +21,17 @@ export interface Update {
     inline_query?: InlineQuery;
     chosen_inline_result?: ChosenInlineResult;
     callback_query?: CallbackQuery;
-}
+};
 
-export interface ChosenInlineResult {
+export type ChosenInlineResult = {
     result_id: string;
     from: User;
     location?: Location;
     inline_message_id?: string;
     query: string;
-}
+};
 
-export interface CallbackQuery {
+export type CallbackQuery = {
     id: string;
     from: User;
     message?: Message;
@@ -39,4 +39,4 @@ export interface CallbackQuery {
     chat_instance: string;
     data?: string;
     game_short_name?: string;
-}
+};

@@ -1,22 +1,15 @@
-import { KeyboardBuilder, KeyboardButton } from './abstract';
-import { ReplyKeyboard, QuizType } from '../../types';
+import { KeyboardBuilder, AbstractButton } from './abstract';
+import type { Markup, ReplyKeyboard } from '../../types/keyboard';
+import type { ReplyKeyboardButton } from '../../types/keyboard';
 
-type ReplyKeyboardButtonProps = {
-    request_contact?: boolean;
-    request_location?: boolean;
-    request_poll?: KeyboardButtonPollType;
-};
-
-type KeyboardButtonPollType = {
-    type: QuizType;
-};
-
-export class Builder extends KeyboardBuilder<ReplyKeyboard, Button, ReplyKeyboardButtonProps, 'keyboard'> {
-    public build = () => ({
-        keyboard: this.rows.map(row => row.build()),
-        ...this.props
-    });
+export class ReplyKeyboardBuilder extends KeyboardBuilder<ReplyKeyboard, ReplyButton, 'keyboard'> {
+    public build(): Markup {
+        return {
+            keyboard: this.rows.map(row => row.build()),
+            ...this.props,
+        };
+    }
 }
 
-export class Button extends KeyboardButton<ReplyKeyboardButtonProps> {
+export class ReplyButton extends AbstractButton<ReplyKeyboardButton> {
 }

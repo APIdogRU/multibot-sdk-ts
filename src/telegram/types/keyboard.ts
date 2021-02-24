@@ -1,66 +1,70 @@
-import { QuizType } from "./media";
+import { QuizType } from './media';
 
-export interface Markup {
+export type Markup =
+    | ReplyKeyboard
+    | KeyboardRemoveMarkup
+    | InlineKeyboard
+    | ForceReplyMarkup;
 
-}
-
-export interface KeyboardButton {
-    text: string;
-}
+export type KeyboardButton = 
+    | ReplyKeyboardButton
+    | InlineKeyboardButton;
 
 /**
  * Reply keyboard
  */
 
-export interface ReplyKeyboard extends Markup {
+export type ReplyKeyboard = {
     keyboard: ReplyKeyboardButton[][];
     resize_keyboard?: boolean;
     one_time_keyboard?: boolean;
     selective?: boolean;
-}
+};
 
-export interface ReplyKeyboardButton extends KeyboardButton {
+export type ReplyKeyboardButton = {
+    text: string;
     request_contact?: boolean;
     request_location?: boolean;
     request_poll?: KeyboardButtonPollType;
-}
+};
 
-export interface KeyboardRemoveMarkup extends Markup {
+export type KeyboardRemoveMarkup = {
     remove_keyboard: boolean;
     selective?: boolean;
-}
+};
 
 export type KeyboardButtonPollType = {
     type?: QuizType;
-}
+};
 
 /**
  * Inline keyboard
  */
 
-export interface InlineKeyboard extends Markup {
+export type InlineKeyboard = {
     inline_keyboard: InlineKeyboardButton[][];
-}
+};
 
-export interface InlineKeyboardButton extends KeyboardButton {
+export type InlineKeyboardButton = {
+    text: string;
     url?: string;
     login_url?: LoginUrl;
     callback_data?: string;
     switch_inline_query?: string;
     switch_inline_query_current_chat?: string;
     callback_game?: CallbackGame;
-}
+};
 
-export interface LoginUrl {
+export type LoginUrl = {
     url: string;
     forward_text?: string;
     bot_username?: string;
     request_write_acces?: boolean;
-}
+};
 
 export type CallbackGame = object;
 
-export interface ForceReplyMarkup extends Markup {
+export type ForceReplyMarkup = {
     force_reply: boolean;
     selective?: boolean;
-}
+};

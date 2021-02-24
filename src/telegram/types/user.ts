@@ -1,7 +1,7 @@
 import { PhotoSize, Message } from '.';
 import { Location } from './media';
 
-export interface User {
+export type User = {
     id: number;
     is_bot: boolean;
     first_name: string;
@@ -11,9 +11,9 @@ export interface User {
     can_join_groups?: boolean;
     can_read_all_group_messages?: boolean;
     supports_inline_queries?: boolean;
-}
+};
 
-export interface Chat {
+export type Chat = {
     id: number;
     type: ChatType;
     title?: string;
@@ -31,7 +31,7 @@ export interface Chat {
     can_set_sticker_set?: boolean;
     linked_chat_id?: number;
     location?: ChatLocation;
-}
+};
 
 export type ChatType = 'private' | 'group' | 'supergroup' | 'channel';
 
