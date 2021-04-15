@@ -1,5 +1,7 @@
 import axios from 'axios';
 import * as FormData from 'form-data';
+import * as fs from 'fs';
+import * as path from 'path';
 import AbstractBot, { IBotPolling } from '../abstract-bot';
 import { User, Message, Update, CallbackQuery, Chat, InlineQuery, ChosenInlineResult, Location, WebhookInfo, ParseMode, ChatAction, UserProfilePhotos, File, Markup, ChatMember, InlineQueryResult, GameHighScore, InlineKeyboard, InputMediaVideo, InputMediaPhoto, QuizType, Poll, MessageEntity, BotCommand } from './types';
 import { TelegramMatcher, MatchType, MatchResultCommand } from './matcher';
@@ -39,7 +41,6 @@ export type ArgumentMessage = {
 export type SendFile = string | Buffer;
 
 export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
-
     private static readonly defaultConfig: Config = {
         secret: 'never_used',
         apiUrl: 'https://api.telegram.org',
@@ -56,52 +57,75 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         this.setMatcher(new TelegramMatcher(this));
     }
 
-    protected getApiEndpoint = (method: string): string => {
-        return `${this.config.apiUrl}/bot${this.config.secret}/${method}`;
-    };
+    protected getApiEndpoint = (method: string): string => `${this.config.apiUrl}/bot${this.config.secret}/${method}`;
 
     private createFormDataFromParams = (params: Record<string, unknown>): FormData => {
         return Object.entries(params).reduce((form, [key, value]) => {
-            if (value !== undefined) {
-                switch (typeof value) {
-                    case 'number':
-                    case 'boolean': {
-                        value = String(value);
-                        break;
-                    }
-
-                    case 'object': {
-                        value = JSON.stringify(value);
-                        break;
-                    }
-                }
-                form.append(key, value);
+            if (value === undefined) {
+                return form;
             }
+
+            if (typeof value === 'string' && ['photo', 'video', 'audio', 'document'].includes(key) && !value.startsWith('http') && fs.existsSync(value)) {
+                value = fs.createReadStream(value);
+            }
+
+            if (value instanceof Buffer || value instanceof fs.ReadStream) {
+                let filename: string = 'filename'; // fallback
+
+                if ('__filename' in params) {
+                    filename = params.__filename as string; // user-specified name
+                } else if (value instanceof fs.ReadStream && typeof value.path === 'string') {
+                    filename = path.basename(value.path); // file stream path
+                }
+
+                form.append(key, value, { filename });
+                return form;
+            }
+
+            switch (typeof value) {
+                case 'number':
+                case 'boolean': {
+                    value = String(value);
+                    break;
+                }
+
+                case 'object': {
+                    value = JSON.stringify(value);
+                    break;
+                }
+            }
+
+            form.append(key, value);
+
             return form;
         }, new FormData());
     };
 
     public request = async<T>(apiMethod: string, params: Record<string, unknown> = {}): Promise<T> => {
-        type Result = {
-            ok: boolean;
+        type ResultOk = {
+            ok: true;
             result: T;
         };
 
+        type ResultError = {
+            ok: false;
+            error_code: number;
+            description: string;
+        };
+
+        type Result = ResultOk | ResultError;
+
+        const url = this.getApiEndpoint(apiMethod);
         const form = this.createFormDataFromParams(params);
+        const headers = form.getHeaders();
 
-        const {
-            data,
-            status,
-            statusText
-        } = await axios.post<Result>(this.getApiEndpoint(apiMethod), form, {
-            headers: form.getHeaders(),
-        });
+        const { data, status, statusText } = await axios.post<Result>(url, form, { headers });
 
-        if (status !== 200) {
-            throw new Error(`Error HTTP ${statusText}`);
+        if (data?.ok) {
+            return data.result;
         }
 
-        return data.result;
+        throw new Error(`Error HTTP ${status} ${statusText}: ${(data as ResultError)?.description}`);
     };
 
     /**
@@ -170,6 +194,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         reply_to_message_id?: number;
         allow_sending_without_reply?: boolean;
         reply_markup?: Markup;
+        __filename?: string;
     }): Promise<Message> => this.request('sendPhoto', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendAudio = async(props: {
@@ -185,7 +210,8 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         disable_notification?: boolean;
         reply_to_message_id?: number;
         allow_sending_without_reply?: boolean;
-        reply_markup?: Markup;        
+        reply_markup?: Markup;
+        __filename?: string;
     }): Promise<Message> => this.request('sendAudio', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendDocument = async(props: {
@@ -199,7 +225,8 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         disable_notification?: boolean;
         reply_to_message_id?: number;
         reply_markup?: Markup;
-        allow_sending_without_reply?: boolean
+        allow_sending_without_reply?: boolean;
+        __filename?: string;
     }): Promise<Message> => this.request('sendDocument', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendVideo = async(props: {
@@ -217,6 +244,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         reply_to_message_id?: number;
         allow_sending_without_reply?: boolean;
         reply_markup?: Markup;
+        __filename?: string;
     }): Promise<Message> => this.request('sendVideo', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendAnimation = async(props: {
@@ -233,6 +261,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         reply_to_message_id?: number;
         allow_sending_without_reply?: boolean;
         reply_markup?: Markup;
+        __filename?: string;
     }): Promise<Message> => this.request('sendAnimation', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendVoice = async(props: {
@@ -246,6 +275,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         reply_to_message_id?: number;
         allow_sending_without_reply?: boolean;
         reply_markup?: Markup;
+        __filename?: string;
     }): Promise<Message> => this.request('sendVoice', sanitizeMarkdownV2Props(props, 'caption'));
 
     public sendVideoNote = async(props: {
@@ -258,6 +288,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         reply_to_message_id?: number;
         allow_sending_without_reply?: boolean;
         reply_markup?: Markup;
+        __filename?: string;
     }): Promise<Message> => this.request('sendVideoNote', props);
 
     public sendMediaGroup = async(props: {
@@ -427,7 +458,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         inline_message_id?: number;
         text: string;
         parse_mode?: ParseMode;
-        entities?: MessageEntity[];    
+        entities?: MessageEntity[];
         disable_web_page_preview?: boolean;
         reply_markup?: Markup;
     }): Promise<Message | true> => this.request('editMessageText', props);
@@ -439,7 +470,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         caption: string;
         parse_mode?: ParseMode;
         caption_entities?: MessageEntity[];
-        reply_markup?: Markup;        
+        reply_markup?: Markup;
     }): Promise<Message | true> => this.request('editMessageCaption', sanitizeMarkdownV2Props(props, 'caption'));
 
     public editMessageMedia = async(props: {
@@ -529,14 +560,14 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
      * Events
      */
 
-    private readonly events: Record<string, Listener[]> = {};
+    private readonly events: Record<string, Set<Listener>> = {};
 
     public on: On = (event: MatchType, listener: never): this => {
         if (!this.events[event]) {
-            this.events[event] = [];
+            this.events[event] = new Set<Listener>();
         }
 
-        this.events[event].push(listener);
+        this.events[event].add(listener);
 
         return this;
     };
