@@ -1,5 +1,5 @@
 import { Bot } from '.';
-import { cfg } from './test.cfg';
+import { cfg } from './cfg.test';
 
 describe('VK bot', () => {
     it('should make request and fetch info about Pavel Durov', async() => {

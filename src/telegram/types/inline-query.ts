@@ -243,7 +243,7 @@ export type InputContactMessageContent = {
     vcard?: string;
 };
 
-export type InputMessageContent = 
+export type InputMessageContent =
     | InputTextMessageContent
     | InputLocationMessageContent
     | InputVenueMessageContent

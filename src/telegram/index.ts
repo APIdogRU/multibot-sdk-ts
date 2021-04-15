@@ -3,7 +3,32 @@ import * as FormData from 'form-data';
 import * as fs from 'fs';
 import * as path from 'path';
 import AbstractBot, { IBotPolling } from '../abstract-bot';
-import { User, Message, Update, CallbackQuery, Chat, InlineQuery, ChosenInlineResult, Location, WebhookInfo, ParseMode, ChatAction, UserProfilePhotos, File, Markup, ChatMember, InlineQueryResult, GameHighScore, InlineKeyboard, InputMediaVideo, InputMediaPhoto, QuizType, Poll, MessageEntity, BotCommand } from './types';
+import {
+    User,
+    Message,
+    Update,
+    CallbackQuery,
+    Chat,
+    InlineQuery,
+    ChosenInlineResult,
+    Location,
+    WebhookInfo,
+    ParseMode,
+    ChatAction,
+    UserProfilePhotos,
+    File,
+    Markup,
+    ChatMember,
+    InlineQueryResult,
+    GameHighScore,
+    InlineKeyboard,
+    InputMediaVideo,
+    InputMediaPhoto,
+    QuizType,
+    Poll,
+    MessageEntity,
+    BotCommand,
+} from './types';
 import { TelegramMatcher, MatchType, MatchResultCommand } from './matcher';
 import { Listener } from '../utils';
 import { sanitizeMarkdownV2Props } from './utils';
@@ -57,9 +82,10 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         this.setMatcher(new TelegramMatcher(this));
     }
 
-    protected getApiEndpoint = (method: string): string => `${this.config.apiUrl}/bot${this.config.secret}/${method}`;
+    protected readonly getApiEndpoint = (method: string): string =>
+        `${this.config.apiUrl}/bot${this.config.secret}/${method}`;
 
-    private createFormDataFromParams = (params: Record<string, unknown>): FormData => {
+    private createFormDataFromParams(params: Record<string, unknown>): FormData {
         return Object.entries(params).reduce((form, [key, value]) => {
             if (value === undefined) {
                 return form;
@@ -70,7 +96,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
             }
 
             if (value instanceof Buffer || value instanceof fs.ReadStream) {
-                let filename: string = 'filename'; // fallback
+                let filename = 'filename'; // fallback
 
                 if ('__filename' in params) {
                     filename = params.__filename as string; // user-specified name
@@ -99,7 +125,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
 
             return form;
         }, new FormData());
-    };
+    }
 
     public request = async<T>(apiMethod: string, params: Record<string, unknown> = {}): Promise<T> => {
         type ResultOk = {
@@ -555,7 +581,6 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         inline_message_id?: number;
     }): Promise<GameHighScore[]> => this.request('getGameHighScores', props);
 
-
     /**
      * Events
      */
@@ -581,7 +606,9 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
     /**
      * Polling
      */
+
     private isPollingActive = false;
+
     private pollingOffset: number | undefined;
 
     public startPolling = (): void => {
@@ -593,6 +620,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
 
         (async() => {
             while (this.isPollingActive) {
+                // eslint-disable-next-line no-await-in-loop
                 await this.poll();
             }
         })();
@@ -609,7 +637,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
                     this.pollingOffset = response[response.length - 1].update_id + 1;
                 }
 
-                resolve(void 0);
+                resolve();
 
                 response.forEach(this.handleUpdate);
             });

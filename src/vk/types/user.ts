@@ -33,7 +33,7 @@ export type UserDeactivateReason = 'deleted' | 'banned';
 export type UserLastSeen = {
     time: number;
     platform?: number;
-}
+};
 
 export const enum Platform {
     MOBILE = 1,
@@ -42,13 +42,13 @@ export const enum Platform {
     ANDROID = 4,
     WINDOWS_PHONE = 5,
     WINDOWS = 6,
-    SITE = 7
+    SITE = 7,
 }
 
 export const enum UserSex {
     UNKNOWN = 0,
     FEMALE = 1,
-    MALE = 2
+    MALE = 2,
 }
 
 export type City = AbsItemWithName;

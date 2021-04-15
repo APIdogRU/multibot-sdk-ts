@@ -10,4 +10,5 @@ export const getUser = async(bot: IBot, userId: number, fields?: UserFieldExtra[
     return users.length ? users[0] : undefined;
 };
 
-export const getSender = async(bot: IBot, message: Message, fields?: UserFieldExtra[]): Promise<User> => getUser(bot, message.from_id, fields);
+export const getSender = async(bot: IBot, message: Message, fields?: UserFieldExtra[]): Promise<User> =>
+    getUser(bot, message.from_id, fields);

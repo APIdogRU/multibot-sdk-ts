@@ -1,6 +1,6 @@
-import AbstractBot, { IBotPolling } from '../abstract-bot';
 import * as FormData from 'form-data';
 import axios from 'axios';
+import AbstractBot, { IBotPolling } from '../abstract-bot';
 import { Config, LongPollProps, Request, UpdateWrap, Update, Message, User, ClientInfo } from './types';
 import { VkMatcher, MatchType } from './matcher';
 import { Listener } from '../utils';
@@ -19,10 +19,7 @@ interface On {
     (event: MatchType.MessageDeny, listener: Listener<Message>): void;
 }
 
-export class Bot
-    extends AbstractBot<Config, Update>
-    implements IBotPolling {
-
+export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
     static readonly defaultConfig: Config = {
         token: 'never_used',
         groupId: 0,
@@ -47,7 +44,8 @@ export class Bot
         this.setMatcher(new VkMatcher(this));
     }
 
-    protected getApiEndpoint = (method: string) => `${this.config.apiUrl}/${method}`;
+    protected readonly getApiEndpoint = (method: string): string =>
+        `${this.config.apiUrl}/${method}`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public request: Request = async<T>(apiMethod: string, params: Record<string, any> = {}): Promise<T> => {
@@ -74,10 +72,9 @@ export class Bot
         const endpoint = this.getApiEndpoint(apiMethod);
 
         const { data, status, statusText } = await axios.post<Response>(endpoint, form, {
-
             headers: {
-                ...(form.getHeaders())
-            }
+                ...(form.getHeaders()),
+            },
         });
 
         if (status !== 200) {
@@ -90,12 +87,13 @@ export class Bot
     /**
      * Polling
      */
-    private isPollingActive = false;
-    private getLongPollServer = async(): Promise<LongPollProps> => {
-        return this.request('groups.getLongPollServer', { group_id: this.config.groupId });
-    };
 
-    public startPolling = async() => {
+    private isPollingActive = false;
+
+    private getLongPollServer = async(): Promise<LongPollProps> =>
+        this.request('groups.getLongPollServer', { group_id: this.config.groupId });
+
+    public startPolling = async(): Promise<void> => {
         if (this.isPollingActive) {
             return;
         }
@@ -105,25 +103,25 @@ export class Bot
 
         (async() => {
             while (this.isPollingActive) {
+                // eslint-disable-next-line no-await-in-loop
                 await this.poll();
             }
         })();
-    }
+    };
 
-    private getLongPollUrl = () => {
+    private getLongPollUrl = (): string => {
         const { server, key, ts } = this.server;
-        return `${server}?act=a_check&key=${key}&ts=${ts}&wait=25`
+        return `${server}?act=a_check&key=${key}&ts=${ts}&wait=25`;
     };
 
-    private waitForResponseLongPoll = async() => {
-        return (await axios.get<UpdateWrap>(this.getLongPollUrl())).data;
-    };
+    private waitForResponseLongPoll = async(): Promise<UpdateWrap> =>
+        (await axios.get<UpdateWrap>(this.getLongPollUrl())).data;
 
-    private poll = async() => new Promise(resolve => {
+    private poll = async() => new Promise<void>(resolve => {
         this.waitForResponseLongPoll().then(response => {
             this.server.ts = response.ts;
 
-            resolve(void 0);
+            resolve();
 
             response.updates.forEach(this.handleUpdate);
         });
@@ -139,13 +137,13 @@ export class Bot
         this.events[event].push(listener);
     };
 
-    private handleUpdate = (update: Update) => {
+    private handleUpdate = (update: Update): void => {
         this.matcher.getMatches(update).forEach(match => {
             this.events[match.type]?.forEach(callback => callback(match.handle(update)));
         });
     };
 
-    public stopPolling = () => {
+    public stopPolling = (): void => {
         this.isPollingActive = false;
     };
 }

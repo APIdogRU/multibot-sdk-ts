@@ -1,42 +1,50 @@
 {
-    "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking"
-    ],
-
-    "parser": "@typescript-eslint/parser",
-
-    "parserOptions": {
-        "project": [
-            "./tsconfig.json",
-            "./test.tsconfig.json"
-        ],
-        "tsconfigRootDir": ".",
-        "ecmaFeatures": {
-            "modules": true
-        }
-    },
-
     "env": {
-        "es6": true,
-        "jest": true
+        "browser": true,
+        "es2021": true
     },
-
-    "plugins": [ "@typescript-eslint" ],
-
-    "globals": {
-        "document": "readonly",
-        "navigator": "readonly",
-        "window": "readonly"
+    "extends": [
+        "airbnb-typescript",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "project": "tsconfig.json",
+        "ecmaVersion": 12,
+        "sourceType": "module"
     },
-
+    "plugins": [
+        "@typescript-eslint"
+    ],
     "rules": {
-        "@typescript-eslint/explicit-function-return-type": "off",
+        "arrow-parens": "off",
+        "default-case": "off",
+        "implicit-arrow-linebreak": "off",
+        "indent": ["error", 4, { "SwitchCase": 1 }],
+        "max-len": ["warn", 140],
+        "no-alert": "off",
+        "no-bitwise": "off",
+        "no-floating-decimal": "off",
+        "no-confusing-arrow": "off",
+        "no-restricted-syntax": "off",
+        "no-plusplus": "off",
+        "object-curly-newline": "off",
+
+        "import/extensions": "off",
+        "import/prefer-default-export": "off",
+
+        "react/require-default-props": "off",
+
         "@typescript-eslint/interface-name-prefix": "off",
+        "@typescript-eslint/indent": ["error", 4, { "SwitchCase": 1 }],
         "@typescript-eslint/no-empty-interface": "off",
-        "@typescript-eslint/camelcase": "off",
-        "@typescript-eslint/no-namespace": "off"
+        "@typescript-eslint/no-shadow": "off",
+        "@typescript-eslint/space-before-function-paren": "off",
+
+        "import/no-cycle": "warn",
+        "no-param-reassign": "off",
+        "no-underscore-dangle": "off",
+        "max-classes-per-file": "warn",
+        "class-methods-use-this": "off"
     }
 }

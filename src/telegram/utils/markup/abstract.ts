@@ -3,7 +3,7 @@ import type { KeyboardButton, Markup } from '../../types';
 
 export abstract class AbstractButton<Props extends KeyboardButton> implements IKeyboardButton {
     protected readonly props: Props;
-    
+
     public constructor(text: string, props: Omit<Props, 'text'> = {} as Props) {
         this.props = {
             ...props,

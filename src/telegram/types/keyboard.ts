@@ -6,7 +6,7 @@ export type Markup =
     | InlineKeyboard
     | ForceReplyMarkup;
 
-export type KeyboardButton = 
+export type KeyboardButton =
     | ReplyKeyboardButton
     | InlineKeyboardButton;
 
@@ -62,7 +62,7 @@ export type LoginUrl = {
     request_write_acces?: boolean;
 };
 
-export type CallbackGame = object;
+export type CallbackGame = Record<string, unknown>;
 
 export type ForceReplyMarkup = {
     force_reply: boolean;

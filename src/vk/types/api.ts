@@ -56,7 +56,10 @@ export interface Request {
 export interface ApiError {
     error_code: number;
     error_message: string;
-    request_params: object[];
+    request_params: {
+        key: string;
+        value: string;
+    }[];
 }
 
 export interface UpdateWrap {
@@ -64,7 +67,8 @@ export interface UpdateWrap {
     updates: Update[];
 }
 
-export type Update = UpdateMessageNew
+export type Update =
+    | UpdateMessageNew
     | UpdateMessageNewLegacy
     | UpdateMessageReply
     | UpdateMessageEdit

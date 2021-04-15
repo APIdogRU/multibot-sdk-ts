@@ -1,6 +1,6 @@
 import { Bot } from '..';
 import { getSender } from '.';
-import { cfg } from '../test.cfg';
+import { cfg } from '../cfg.test';
 
 describe('User utils', () => {
     it('getSender in message', async() => {

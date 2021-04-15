@@ -8,7 +8,7 @@ export const enum MatchType {
     MessageOut = 'message_reply',
     MessageEdit = 'message_edit',
     MessageAllow = 'message_allow',
-    MessageDeny = 'message_deny'
+    MessageDeny = 'message_deny',
 }
 
 type MTest = MatchTest<Update>;
@@ -16,7 +16,7 @@ type MHandle = MatchHandle<Update>;
 
 const fetcherUser = (message: Message, bot: IBot) => async(fields?: UserFieldExtra[]) => getSender(bot, message, fields);
 
-export const testMessage: MTest = update => update.type == 'message_new';
+export const testMessage: MTest = update => update.type === 'message_new';
 export const handleMessage: MHandle = ({ object }, bot) => {
     if ('message' in object) {
         return {
@@ -24,31 +24,34 @@ export const handleMessage: MHandle = ({ object }, bot) => {
             capability: object.client_info,
             getSender: fetcherUser(object.message, bot),
         };
-    } else {
-        return {
-            message: object,
-            getSender: fetcherUser(object as Message, bot),
-        };
     }
+
+    return {
+        message: object,
+        getSender: fetcherUser(object as Message, bot),
+    };
 };
 
 export const testMessageEdit: MTest = update => update.type === 'message_edit';
+
 export const handleMessageEdit: MHandle = ({ object }, bot) => ({
     message: object as Message,
     getSender: fetcherUser(object as Message, bot),
-})
+});
 
 export const testMessageAllow: MTest = update => update.type === 'message_allow';
+
 export const handleMessageAllow: MHandle = (update, bot) => ({
     event: update.object,
-    getUser: () => getUser(bot, (update.object as {user_id: number}).user_id)
-})
+    getUser: () => getUser(bot, (update.object as { user_id: number }).user_id),
+});
 
 export const testMessageDeny: MTest = update => update.type === 'message_deny';
+
 export const handleMessageDeny: MHandle = (update, bot) => ({
     event: update.object,
-    getUser: () => getUser(bot, (update.object as {user_id: number}).user_id),
-})
+    getUser: () => getUser(bot, (update.object as { user_id: number }).user_id),
+});
 
 export class VkMatcher extends Matcher<Update> {
     constructor(bot: IBot) {

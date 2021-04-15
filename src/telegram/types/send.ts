@@ -3,7 +3,7 @@ import { Markup } from '.';
 export const enum ParseMode {
     Markdown = 'Markdown',
     MarkdownV2 = 'MarkdownV2',
-    HTML = 'HTML'
+    HTML = 'HTML',
 }
 
 export type BaseOption = {

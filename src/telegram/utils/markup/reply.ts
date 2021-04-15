@@ -1,6 +1,5 @@
 import { KeyboardBuilder, AbstractButton } from './abstract';
-import type { Markup, ReplyKeyboard } from '../../types/keyboard';
-import type { ReplyKeyboardButton } from '../../types/keyboard';
+import type { Markup, ReplyKeyboard, ReplyKeyboardButton } from '../../types/keyboard';
 
 export class ReplyKeyboardBuilder extends KeyboardBuilder<ReplyKeyboard, ReplyButton, 'keyboard'> {
     public build(): Markup {

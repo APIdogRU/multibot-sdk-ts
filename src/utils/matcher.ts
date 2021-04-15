@@ -18,9 +18,10 @@ export interface IMatcher<Update> {
 
 export abstract class Matcher<Update> implements IMatcher<Update> {
     protected readonly bot: IBot;
+
     protected readonly rules: MatchRule<Update>[] = [];
 
-    constructor(bot: IBot, rules?: MatchRule<Update>[]) {
+    public constructor(bot: IBot, rules?: MatchRule<Update>[]) {
         this.bot = bot;
         this.rules = rules;
     }
@@ -28,11 +29,12 @@ export abstract class Matcher<Update> implements IMatcher<Update> {
     /**
      * Add rule for match
      */
-    public add = (item: MatchRule<Update>) => {
+    public add = (item: MatchRule<Update>): void => {
         if (!this.rules.includes(item)) {
             this.rules.push(item);
         }
     };
 
-    public getMatches = (update: Update) => this.rules.filter(rule => rule.test(update, this.bot));
+    public getMatches = (update: Update): MatchRule<Update>[] =>
+        this.rules.filter(rule => rule.test(update, this.bot));
 }

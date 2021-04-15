@@ -6,11 +6,11 @@ export interface Message {
     out: number;
     text: string;
     conversation_message_id: number;
-    fwd_messages: object[];
-    geo?: object;
+    fwd_messages: Record<string, unknown>[]; // todo
+    geo?: Record<string, unknown>; // todo
     random_id?: number;
     important: boolean;
-    attachments: object[];
+    attachments: Record<string, unknown>[]; // todo
     admin_author_id?: number;
     is_hidden?: boolean;
 }

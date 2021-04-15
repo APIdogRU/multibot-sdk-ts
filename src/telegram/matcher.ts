@@ -1,6 +1,6 @@
 import { Update, Media, Message, FileBase } from './types';
 import { extractEntites } from './utils';
-import { Matcher, MatchHandle, MatchTest } from '../utils';
+import { Matcher, MatchHandle, MatchRule, MatchTest } from '../utils';
 import { IBot } from '../abstract-bot';
 import { Bot, ArgumentMessage } from '.';
 
@@ -28,7 +28,7 @@ export enum MatchType {
     Poll = 'poll',
     Game = 'game',
     VideoNote = 'video_note',
-    Media = 'media'
+    Media = 'media',
 }
 
 type MTest = MatchTest<Update>;
@@ -37,17 +37,14 @@ type MHandle = MatchHandle<Update>;
 export const testMessage: MTest = update => 'message' in update;
 export const handleMessage: MHandle = ({ message }) => message;
 
-
 export const testMessageEdited: MTest = update => 'message_edited' in update;
 export const handleMessageEdited: MHandle = ({ edited_message }) => edited_message;
 
 export const testChannelPost: MTest = update => 'channel_post' in update;
 export const handleChannelPost: MHandle = update => update.channel_post;
 
-
 export const testChannelPostEdited: MTest = update => 'edited_channel_post' in update;
 export const handleChannelPostEdited: MHandle = update => update.edited_channel_post;
-
 
 export const testCallbackQuery: MTest = update => 'callback_query' in update;
 export const handleCallbackQuery: MHandle = update => update.callback_query;
@@ -55,10 +52,8 @@ export const handleCallbackQuery: MHandle = update => update.callback_query;
 export const testInlineQuery: MTest = update => 'inline_query' in update;
 export const handleInlineQuery: MHandle = update => update.inline_query;
 
-
 // export const testExactText: MTest = update => testMessage(update) && ('text' in update.message || 'caption' in update.message);
 // export const handleExactText: MHandle = update => update.message;
-
 
 export interface MatchResultCommand extends ArgumentMessage {
     starts: boolean;
@@ -99,12 +94,13 @@ export const checkMatchRegExp: MatchCheck<RegExpMatch> = (message, rule) => {
     return res
         ? { matches: [...res].slice(1) }
         : false;
-};*/
+};
+*/
 
 const media = (field: string): { test: MTest; handle: MHandle } => ({
     test: update => testMessage(update) && field in update.message,
     handle: (update, bot: Bot) => ({
-        ...handleMessage(update) as object,
+        ...handleMessage(update) as Record<string, unknown>,
         getFileUrl: () => bot.request('getFile', {
             file_id: ['photo', 'new_chat_photo'].includes(field)
                 ? update.message.photo[0].file_id
@@ -114,15 +110,17 @@ const media = (field: string): { test: MTest; handle: MHandle } => ({
 });
 
 const mediaTypes = ['photo', 'video', 'audio', 'document', 'animation', 'voice', 'sticker', 'location', 'venue', 'contact', 'poll', 'game'];
+
 export type MatchMedia = {
     type: string;
     object: Media;
 };
+
 const testMedia: MTest = update => mediaTypes.some(key => testMessage(update) && key in update.message);
 const handleMedia: MHandle = update => {
     const type = mediaTypes.find(type => type in update.message);
     return {
-        ...handleMessage(update) as object,
+        ...handleMessage(update) as Record<string, unknown>,
         media: {
             type,
             object: update.message[type as keyof Message],
@@ -130,9 +128,8 @@ const handleMedia: MHandle = update => {
     };
 };
 
-
 export class TelegramMatcher extends Matcher<Update> {
-    constructor(bot: IBot) {
+    public constructor(bot: IBot) {
         super(bot, [
             { type: MatchType.Message, test: testMessage, handle: handleMessage },
             { type: MatchType.MessageEdited, test: testMessageEdited, handle: handleMessageEdited },
@@ -140,9 +137,9 @@ export class TelegramMatcher extends Matcher<Update> {
             { type: MatchType.ChannelPostEdited, test: testChannelPostEdited, handle: handleChannelPostEdited },
             { type: MatchType.CallbackQuery, test: testCallbackQuery, handle: handleCallbackQuery },
             { type: MatchType.InlineQuery, test: testInlineQuery, handle: handleInlineQuery },
-//            { type: MatchType.Exact, test: testExactText, handle: handleExactText },
+            // { type: MatchType.Exact, test: testExactText, handle: handleExactText },
             { type: MatchType.Command, test: testCommand, handle: handleCommand },
-//            { type: MatchType.RegExp, test: testRegExp, handle: handleRegExp },
+            // { type: MatchType.RegExp, test: testRegExp, handle: handleRegExp },
             { type: MatchType.Photo, ...media('photo') },
             { type: MatchType.Video, ...media('video') },
             { type: MatchType.Audio, ...media('audio') },
@@ -155,10 +152,11 @@ export class TelegramMatcher extends Matcher<Update> {
             { type: MatchType.Contact, ...media('contact') },
             { type: MatchType.Poll, ...media('poll') },
             { type: MatchType.Game, ...media('game') },
-//            { type: MatchType.VideoNote, ...media('video_note') },
+            // { type: MatchType.VideoNote, ...media('video_note') },
             { type: MatchType.Media, test: testMedia, handle: handleMedia },
         ]);
     }
 
-    public getMatches = (update: Update) => this.rules.filter(rule => rule.test(update));
+    public getMatches = (update: Update): MatchRule<Update>[] =>
+        this.rules.filter(rule => rule.test(update));
 }
