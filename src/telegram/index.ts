@@ -1,4 +1,4 @@
-import axios from 'axios';
+import fetch from 'node-fetch';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -143,9 +143,16 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
 
         const url = this.getApiEndpoint(apiMethod);
         const form = this.createFormDataFromParams(params);
-        const headers = form.getHeaders();
 
-        const { data, status, statusText } = await axios.post<Result>(url, form, { headers });
+        const request = await fetch(url, {
+            method: 'POST',
+            body: form,
+            headers: form.getHeaders(),
+            timeout: 5000,
+        });
+
+        const data: Result = await request.json();
+        const { status, statusText } = request;
 
         if (data?.ok) {
             return data.result;

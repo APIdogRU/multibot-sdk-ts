@@ -1,7 +1,7 @@
 import * as FormData from 'form-data';
-import axios from 'axios';
+import fetch from 'node-fetch';
 import AbstractBot, { IBotPolling } from '../abstract-bot';
-import { Config, LongPollProps, Request, UpdateWrap, Update, Message, User, ClientInfo } from './types';
+import { Config, LongPollProps, Request, UpdateWrap, Update, Message, User, ClientInfo, ApiError } from './types';
 import { VkMatcher, MatchType } from './matcher';
 import { Listener } from '../utils';
 
@@ -49,7 +49,8 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public request: Request = async<T>(apiMethod: string, params: Record<string, any> = {}): Promise<T> => {
-        type Response = { response: T };
+        type ResponseRoot = { response: T };
+        type ErrorRoot = { error: ApiError };
 
         const form = Object.keys(params).reduce((form, key) => {
             if (params[key] !== undefined) {
@@ -71,14 +72,21 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
 
         const endpoint = this.getApiEndpoint(apiMethod);
 
-        const { data, status, statusText } = await axios.post<Response>(endpoint, form, {
-            headers: {
-                ...(form.getHeaders()),
-            },
-        });
+        const request = await fetch(endpoint, {
+            method: 'POST',
+            body: form,
+            headers: form.getHeaders(),
+        })
+
+        const data: ResponseRoot | ErrorRoot = await request.json();
+        const { status, statusText } = request;
 
         if (status !== 200) {
             throw new Error(`Error HTTP ${statusText}`);
+        }
+
+        if ('error' in data) {
+            throw data.error;
         }
 
         return data.response;
@@ -114,8 +122,10 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         return `${server}?act=a_check&key=${key}&ts=${ts}&wait=25`;
     };
 
-    private waitForResponseLongPoll = async(): Promise<UpdateWrap> =>
-        (await axios.get<UpdateWrap>(this.getLongPollUrl())).data;
+    private waitForResponseLongPoll = async(): Promise<UpdateWrap> => {
+        const request = await fetch(this.getLongPollUrl());
+        return request.json();
+    }
 
     private poll = async() => new Promise<void>(resolve => {
         this.waitForResponseLongPoll().then(response => {
