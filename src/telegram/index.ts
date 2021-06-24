@@ -625,10 +625,23 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
 
         this.isPollingActive = true;
 
+        let errorCountInRow = 0;
+
         (async() => {
             while (this.isPollingActive) {
-                // eslint-disable-next-line no-await-in-loop
-                await this.poll();
+                try {
+                    // eslint-disable-next-line no-await-in-loop
+                    await this.poll();
+
+                    errorCountInRow = 0;
+                } catch (e) {
+                    ++errorCountInRow;
+
+                    if (errorCountInRow > 3) {
+                        console.error('3 requests in a row failed. The bot has stopped.');
+                        process.exit(5);
+                    }
+                }
             }
         })();
     };
