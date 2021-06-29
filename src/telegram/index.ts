@@ -144,11 +144,13 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         const url = this.getApiEndpoint(apiMethod);
         const form = this.createFormDataFromParams(params);
 
+        const timeout = apiMethod === 'getUpdates' ? 30000 : 5000;
+
         const request = await fetch(url, {
             method: 'POST',
             body: form,
             headers: form.getHeaders(),
-            timeout: 5000,
+            timeout,
         });
 
         const data: Result = await request.json();
@@ -651,7 +653,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
     };
 
     private poll = async(): Promise<void> => new Promise<void>(resolve => {
-        this.getUpdates({ offset: this.pollingOffset })
+        this.getUpdates({ offset: this.pollingOffset, timeout: 25 })
             .then(response => {
                 if (response.length) {
                     this.pollingOffset = response[response.length - 1].update_id + 1;
