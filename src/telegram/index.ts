@@ -652,7 +652,7 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
         this.isPollingActive = false;
     };
 
-    private poll = async(): Promise<void> => new Promise<void>(resolve => {
+    private poll = async(): Promise<void> => new Promise<void>((resolve, reject) => {
         this.getUpdates({ offset: this.pollingOffset, timeout: 25 })
             .then(response => {
                 if (response.length) {
@@ -662,7 +662,8 @@ export class Bot extends AbstractBot<Config, Update> implements IBotPolling {
                 resolve();
 
                 response.forEach(this.handleUpdate);
-            });
+            })
+            .catch(reject);
     });
 }
 
